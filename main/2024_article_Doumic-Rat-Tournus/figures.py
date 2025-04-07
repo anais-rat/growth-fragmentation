@@ -4,292 +4,363 @@
 Created on Mon Nov  7 12:17:43 2022
 
 @author: arat
+
+Script to run to plot the figures of the article (and some more):
+"Comparison Between Effective and Individual Growth Rates in a Heterogeneous
+ Population; Marie Doumic, Anaïs Rat, Magali Tournus."
+
 """
 
 import matplotlib.pyplot as plt
 import matplotlib.font_manager
 import numpy as np
 import os
+# import pandas as pd
 import seaborn as sns
 
-import src.scheme_direct as scheme
-import src.parameters.figures_chap1 as par
-import src.parameters.kappas as ker
+# import parameters as par
+import project_path
+import src.effective_fitness as fv
+import src.parameters.figures_properties as fp
+# import src.parameters.kappas as ker
 import src.plot as plot
-import src.write_path as wp
+# import src.write_path as wp
 
 
 # ----------
 # Parameters
 # ----------
 
-# IS_FAST_COMPUTING = {'s2': False, 's3_1': False, 's3_2': False}
+IS_SAVED = True  # True to save plotted figures.
 
-IS_SAVED = False
-
-FORMAT = 'manuscript' # 'manuscript' or 'article'.
+FORMAT = 'article'
 
 
 # Parameter of the figures
-# ------------------------
-
-# # NB: comment one `LABELS` entry to prevent its compuation.
-# tmp = r"$\kappa^{{_{{FtS}}}}$"
-# LABELS = {# Subsection 3.2. (s2).
-#           # 'uniform': r"$\kappa^{uniform}$",
-#           # 'irr': r"$\kappa^{irr}$",
-#           # 'red_no_mixing': r"$\kappa^{red}$",
-#           # Subsection 3.3. first set of figures (s3_1).
-#           # 'red_mixing_1': rf"$\kappa^{{_{{StF}}}} ( {par.PROB_StF} )$",
-#           # 'red_mixing_2': tmp + rf"$( {par.PROB_FtS} )$",
-#           # 'red_mixing_3': tmp + rf"$( 1 - {par.PROB_FtS} )$",
-#           # Subsection 3.3. second set of figures (s3_2).
-#             'red_no_mixing_test': r"$\kappa^{red}$",
-#            'red_mixing_limit': tmp + r"$(p_0)$",
-#            f'red_mixing_limit-{par.EPS}_l': tmp + r"$(p_0 - \varepsilon)$",
-#            f'red_mixing_limit-{par.EPS}_r': tmp + r"$(p_0 + \varepsilon)$"
-#           }
-
-# # Location of legend.
-# LEG_LOC = {'s2': None, 's3_1': None, 's3_2': None}
-
-# # Title of legend.
-# LEG_TIT = {key: None for key in LABELS.keys()}
-# LEG_TIT[f'red_mixing_limit-{par.EPS}_l'] = r'$p = p_0 - \varepsilon$'
-# LEG_TIT[f'red_mixing_limit-{par.EPS}_r'] = r'$p = p_0 + \varepsilon$'
-
-# # Maximum time plotted (None for the end of computation).
-# # > For `plot_evo_lambda_estimates`and `plot_evo_distribution_at_fixed_size`.
-# T_MAX = {'s2': 12, 's3_1': 12,'s3_2': 20}
-# # > For `plot_evo_distribution_discrete`.
-# T_MAX_0 = {'s2': 19, 's3_1': 20, 's3_2': 20}
-
-# IS_CONTINUOUS_TIME_COMPUTED = False
-# if IS_CONTINUOUS_TIME_COMPUTED:
-#     # .......................................................................
-#     # Number of times saved per period (need to be changed for high time
-#     # resolution video from images generated with
-#     # `plot_evo_distribution_continuous`).
-#     TSAVED_PER_PERIOD_COUNT = 50 # par.TSAVED_PER_PERIOD_COUNT
-#     # > Maximal time to compute.
-#     T_COMPUTE_MAX = {'s2': 6, 's3_1': 12, 's3_2': 12}
-#     # > Maximal time to plot (lower than previous).
-#     T_PLOT_MAX = {'s2': 4, 's3_1': 8, 's3_2': 8}
-#     XTEST_C = par.X_TEST # If not None the images saved are contains 2 figures.
-#     # .......................................................................
-# else:
-#     FIG_COUNT = 8
-#     TSAVED_PER_PERIOD_COUNT = par.TSAVED_PER_PERIOD_COUNT
-#     T_COMPUTE_MAX = {'s2': None, 's3_1': None, 's3_2': None}
-#     # Size of the figure for discrete evolution.
-#     if FORMAT == 'manuscript':
-#         FIG_SIZE = {'s2': (5.8, 3), 's3_1': (4.8, 2.6), 's3_2': (5.2, 3)}
-#     else:
-#         FIG_SIZE = {'s2': None, 's3_1': (4.2, 2), 's3_2': None}
-
-
-
 # .............................................................................
-fig_dir = None
+FIG_DIR = None
 
 # Global plotting parameters and figure directory.
-matplotlib.rcParams.update(matplotlib.rcParamsDefault) # Reset to default.
-matplotlib.rcParams['text.latex.preamble'] = r'\usepackage{{amsmath}}'# pmatrix
-
-if FORMAT == 'manuscript':
+sns.set_theme()  # Theme reset to default.
+matplotlib.rcParams.update(matplotlib.rcParamsDefault)  # Reset to default.
+if FORMAT == 'article':
     if IS_SAVED:
-        fig_dir = 'figures_manuscript/chapter_1'
-        if (not os.path.exists(fig_dir)):
-            os.makedirs(fig_dir)
-    sns.set_style("darkgrid")
-    sns.set_context("talk", font_scale = 1.3)
-    plt.rcParams.update({'axes.facecolor': ".94",
-                         'text.usetex': True,
-                         'figure.dpi': 600, # Resolution of plottings.
-                         'font.family': "sans-serif", # latex-like: 'serif',
-                         'font.sans-serif': "Helvetica", # ... 'cmr10'
-                         'legend.frameon': True,
-                         'legend.framealpha': 1,
-                         'legend.facecolor': 'white',
-                         'legend.edgecolor': '#EAEAF2',
-                         'legend.fancybox': True,
-                          # 'legend.title_fontsize': 16.5,
-                          # 'legend.fontsize': 16
-                          })
-    fig_size_discrete = {'s2': None, 's3_1': (4.8, 2), 's3_2': None}
-    fig_size = (5, 3)
-    bbox_to_anchor = (0, 1.4) # 0.67, -0.02)
-elif FORMAT == 'article':
-    if IS_SAVED:
-        fig_dir = 'figures_article'
-        if (not os.path.exists(fig_dir)):
-            os.makedirs(fig_dir)
-    sns.set_style("ticks") # "ticks") # "darkgrid")whitegrid
-    sns.set_context("poster", font_scale = 1) #"paper", font_scale=2)
-    plt.rcParams.update({'text.usetex': True,
-                         'figure.dpi': 600,
-                         'font.family': "sans-serif",
-                         'font.sans-serif': ["Helvetica"],
-                         'legend.frameon': True,
-                         'legend.framealpha': 1,
-                         'legend.facecolor': 'white',
-                         'legend.edgecolor': 'white',
-                         'legend.fancybox': True
-                         })
-    fig_size_discrete = {'s2': None, 's3_1': (4.2, 2), 's3_2': None}
-    fig_size = (5, 3)
-    bbox_to_anchor = None
+        FIG_DIR = os.path.join('2024_article_Doumic-Rat-Tournus')
+    sns.set_style("ticks")  # "ticks") # "darkgrid")  whitegrid
+    # sns.axes_style("ticks")
+    sns.set_context("talk", font_scale=1)  # "poster", font_scale=1)
+    # plt.rcParams.update(fp.PAR_RC_UPDATE_MANUSCRIPT)
+    PAR_RC_UPDATE = {
+        'figure.dpi': fp.DPI,
+        'text.usetex': True,
+        'text.latex.preamble':
+            r'\usepackage{dsfont, amsmath}',  # amsmath: pmatrix
+        'font.family': "sans-serif",
+        'font.sans-serif': ["Helvetica"],
+        'legend.frameon': False,
+        'legend.framealpha': 1,
+        'legend.facecolor': 'white',
+        'legend.edgecolor': 'white'
+        }
+    plt.rcParams.update(PAR_RC_UPDATE)
 else:
     print("Redine 'Format' correctly")
 print(sns.plotting_context())
+
+PALETTE = 'inferno'
 # .............................................................................
 
 
-# ------------------------
-# Computation and plotting
-# ------------------------
+# ------------------------------
+# Global parameters of the model
+# ------------------------------
 
-# for section_key, kappas in par.KAPPAS.items():
-
-# PARAMETERS
-# ----------
-FEATURES = np.array([1, 2])
-
-IS_FAST_COMPUTING = True
-
-ALPHA = 2
-BETA_CONSTANT = 1
-
-PERIOD_COUNT = 10
-
-
-# leg_loc = LEG_LOC[section_key]
-# t_max = T_MAX[section_key]
-# t_max_0 = T_MAX_0[section_key]
-# t_max_c = T_COMPUTE_MAX[section_key]
-# t_compute_max = T_COMPUTE_MAX[section_key]
-# last_key = list(kappas.keys())[-1]
+# Equation form.
 IS_CONSERVATIVE = False
-if IS_FAST_COMPUTING:
-    PRECISION = par.K_F
-    X_COUNT = par.X_COUNT_F
-else:
-    PRECISION = par.K
-    X_COUNT = par.X_COUNT
 
-# # Initialization of the list of outputs associated with `section_key`.
-# times = None
-# n_sum_evos = []
-# labels = []
+# Growth and fragmentation rates: > tau(v, x) = v tau(x).
+#                                 > gamma(v, x) = v tau(x) beta(x).
+# Case A: tau(x) = 1, beta = 1.
+# Case B: tau(x) = x, beta general (e.g. linear).
 
-# Iteration on the kernels defined for `section_key` that appear in LABELS.
-# for key, kappa in kappas.items():
+# Division rate per unit of size: beta(x) = CONSTANT x ** ALPHA.
+# > Case A.
+ALPHA = 0
+CONSTANT = 1
+PAR_BETA_CONSTANT = [ALPHA, CONSTANT]
+# > Case B.
+ALPHA = 1
+CONSTANT = 1
+PAR_BETA_LINEAR = [ALPHA, CONSTANT]
 
-# if key in list(LABELS.keys()):
-
-# COMPUTATION
-# -----------
-# is_normalize_by_feature = False
-# if 'red_no_mixing' in key:
-#     is_normalize_by_feature = True
+# Parameter for plot.
+X_MAX = 5
 
 
-PAR_KAPPA = ker.kappa_identity(len(FEATURES))
+# FIGURES 2, 5 (case  A/B, M = 2)
+# -------------------------------
 
-N_INIT_CHOICE = 'exponential'
-N_INIT_1 = 30
-N_INIT_2 = 60
+# Features: one fixed (`FIXED_TRAIT`) and one running through `TRAITS`.
+FIXED_TRAIT = 4
+TRAITS = np.linspace(1, 8, 200)
 
+# Various transition matrices.
+KAPPAS = [  # > 0. Uniform kernel (geometric mean).
+          np.array([[0.5, 0.5], [0.5, 0.5]]),
+          # > 1. "Diagonal and uniform" (arithmetic mean).
+          np.array([[0.75, 0.25], [0.25, 0.75]]),
+          # > 2. Mixing beneficial to v_2.
+          np.array([[0.2, 0.8],  [0.2, 0.8]]),
+          # > 3. Low mixing kernel.
+          np.array([[0.8, 0.2], [0.2, 0.8]]),
+          # > 4. High mixing kernel.
+          np.array([[0.2, 0.8], [0.8, 0.2]]),
+          # > 5. Mixing beneficial to v_1.
+          np.array([[0.8, 0.2], [0.8, 0.2]])]
 
-PAR_BETA = [ALPHA, BETA_CONSTANT]
-PAR_GRIDS = [PRECISION, X_COUNT, PERIOD_COUNT]
-PAR_N_INIT = [[N_INIT_1, N_INIT_2], N_INIT_CHOICE]
+# # One per graphe.
+# for kappa in KAPPAS:
+#     fv.plot_2D_v_eff_and_mean_wrt_traits_constant(
+#         kappa, FIXED_TRAIT, TRAITS, PAR_BETA_CONSTANT, FIG_DIR,
+#         palette='inferno')
 
+# Several per graph.
+# > FIGURE 1 (effective fitness coincides with clasical means).
+LABELS = [rf'$(k_{{1}}, k_{{2}}) = ({kappa[0, 1]}, {kappa[1, 0]})$' for kappa
+          in KAPPAS[:2]]
+fv.plot_2D_v_eff_and_mean_wrt_traits_constant(
+    KAPPAS[:2], FIXED_TRAIT, TRAITS, PAR_BETA_CONSTANT[1], FIG_DIR,
+    labels=LABELS, palette='inferno')
 
-d = scheme.compute_longtime_approximation(IS_CONSERVATIVE, FEATURES, PAR_BETA,
-                                          PAR_KAPPA, PAR_N_INIT, PAR_GRIDS,
-                                          is_saved=IS_SAVED)
-plot.plot_distribution_old(d[], features, distribution)
-    
-    # # UPDATE OF SAVED DATA
-    # # --------------------
-    # if isinstance(times, type(None)):
-    #     times = d['times']
-    # n_sum_evos.append(d['n_sum_evo'])
-    # labels.append(LABELS[key])
-
-
-    # PLOTTING OF THE CURRENT OUTPUTS
-    # -------------------------------
-    # name = 'kappa-' + key + f'_V{wp.list_to_string(features)}_' + \
-    #     f'alpha{par.ALPHA}' # General name of figures.
-
-    # # Time evolution of the difference between normalized distribution
-    # # ................................................................
-    # plot.plot_evo_n_tdiff(d['times'], d['n_tdiff_evo'], name=name,
-    #                       fig_dir=fig_dir)
-
-    # # Time evolution of lambda estimates
-    # # ..................................
-    # plot.plot_evo_lambda_estimates(d['times'], features,
-    #                                d['lambda_estimates'], name=name,
-    #                                t_max=t_max, fig_dir=fig_dir)
-
-    # Time evolution of densities by features
-    # .......................................
-    # if IS_CONTINUOUS_TIME_COMPUTED:
-    #     # Continuous version
-    #     X_MAX = 2.5
-    #     t_max_p = T_PLOT_MAX[section_key]
-    #     # plot.plot_evo_distribution_continuous(d['t_test'], d['sizes'],
-    #     #     features, d['n_evo'], x_max=X_MAX, name=name,
-    #     #     is_saved=IS_SAVED, t_max=t_max_p, xtest=XTEST_C)
-    # else:
-    #     print(key, last_key)
-    #     # Discrete version
-    #     X_MAX = 2.5
-    #     plot.plot_evo_distribution_discrete(FIG_COUNT, d['t_test'],
-    #         d['sizes'], features, d['n_evo'], x_max=X_MAX, name=name,
-    #         t_max=t_max_0, fig_dir=fig_dir, is_legend=key==last_key,
-    #         figsize=fig_size_discrete[section_key])
-
-    #     # At size = 'x_test' fixed (n(t, v, x_text) for every v).
-    #     leg_loc_new = leg_loc
-    #     if  key == f'red_mixing_limit-{par.EPS}_l':
-    #         leg_loc_new = "best"
-        # # All times plotted.
-        # plot.plot_evo_distribution_at_fixed_size(d['times'], features,
-        #     d['n_test'], fixed_size=par.X_TEST, name=name,
-        #     fig_dir=fig_dir, leg_loc=leg_loc_new, title=LEG_TIT[key],
-        #     figsize=FIG_SIZE[section_key])
-        # # Only up to t_max.
-        # plot.plot_evo_distribution_at_fixed_size(d['times'], features,
-        #     d['n_test'], fixed_size=par.X_TEST, name=name,
-        #     t_max=t_max, fig_dir=fig_dir, leg_loc=leg_loc_new,
-        #     title=LEG_TIT[key], figsize=FIG_SIZE[section_key])
-
-        # # Renormalized densities: m(t,v,x_test) = C(t,v) n(t,v,x_test)
-        # #  s.t. \int m(t,v,x) dx = 1 for every (t,v).
-        # if is_normalize_by_feature:
-        #     plot.plot_evo_distribution_at_fixed_size(d['t_test'],
-        #         features, d['n_evo_norm_wrt_v'][:, :, par.X_TEST],
-        #         fixed_size=par.X_TEST, name='norm_wrt_v_' + name,
-        #         fig_dir=fig_dir, leg_loc="upper right",
-        #         is_wo_vmax_plotted=True, figsize=FIG_SIZE[section_key])
-        #         # With & wo vmax for clarity.
+# > FIGURE 5 (effective fitness not "controled" by a clasical mean).
+LABELS = [rf'$(k_{{1}}, k_{{2}}) = ({kappa[0, 1]}, {kappa[1, 0]})$'
+          for kappa in KAPPAS[2:]]
+fv.plot_2D_v_eff_and_mean_wrt_traits_constant(
+    KAPPAS[2:], FIXED_TRAIT, TRAITS, PAR_BETA_CONSTANT[1], FIG_DIR,
+    labels=LABELS, palette='inferno', bbox_to_anchor=(1, 1))
 
 
-# PLOTTING OF OUTPUTS COMMON TO ALL COMPUTATIONS
-# ----------------------------------------------
+# FIGURE 3  (case  A/B, M = 2)
+# ----------------------------
 
-# # Time evolution of the log of the total number
-# # ..............................................
-# if len(n_sum_evos) > 1:
-#     name = f'kappa-x{len(n_sum_evos)}' + \
-#             f'_V{wp.list_to_string(features)}_alpha{par.ALPHA}'
-#     idx_tmax = min([len(n_sum) for n_sum in n_sum_evos])
-#     plot.plot_evo_log_n_sum(times[:idx_tmax],
-#                             [n_sum[:idx_tmax] for n_sum in n_sum_evos],
-#                             labels, name=name, fig_dir=fig_dir,
-#                             fig_size=fig_size,
-#                             bbox_to_anchor=bbox_to_anchor)
+# Growth rate and traits: tau(i, x) = TRAITS[i].
+TRAITS = np.array([0.5, 2.5])  # np.array([1.4, 1.6])
+
+# Transition matrix.
+KAPPA = np.array([[0.7, 0.4], [0.5, 0.5]])  # (irreducible, full mixing).
+
+# > kappa = KAPPA
+out = fv.compute_longtime_approximation_2D_mix_vs_irr(
+    IS_CONSERVATIVE, TRAITS, PAR_BETA_CONSTANT, KAPPA,
+    is_normalized_by_v=False)
+out_n = fv.compute_longtime_approximation_2D_mix_vs_irr(
+    IS_CONSERVATIVE, TRAITS, PAR_BETA_CONSTANT, KAPPA, is_normalized_by_v=True)
+
+# Plot all.
+N_1, N_2 = np.sum(out['irr'], axis=1)
+davg = [out['irr'][0] * N_1 + out['irr'][1] * N_2]
+davg_n = davg / np.sum(davg)
+
+davg_arit = [(out['irr'][0] + out['irr'][1]) / 2]
+davg_arit_n = davg_arit / np.sum(davg_arit)
+
+LABELS = [r"$\frac{N_1}{\int N_1 }$", r"$\frac{N_2}{\int N_2 }$",
+          r"$N_{v}$",
+          r"$N_1 + N_2$",
+          r"$\frac{N_1 \int N_1 + N_2 \int N_2}{(\int N_1)^2 + (\int N_2)^2}$"]
+
+# # N = (N_1, N_2) normalized (in particular N_1, N_2 not normalized).
+# plot.plot_distribution(
+#     out['sizes'], TRAITS,
+#     np.concatenate([out['irr'], [out['red'][0]], davg_arit_n, davg_n]),
+#     fig_name=f'comparison_N_normalized_v{TRAITS[0]}-{TRAITS[1]}',
+#     fig_dir=FIG_DIR, y_key_label=None, labels=LABELS,
+#     xmax=X_MAX, palette=PALETTE)
+
+# plot.plot_distribution(
+#     out['sizes'], TRAITS,
+#     np.concatenate([out['irr'], [out['red'][0]], davg_arit, davg]),
+#     fig_name=f'comparison_N_normalized_v{TRAITS[0]}-{TRAITS[1]}',
+#     fig_dir=FIG_DIR, y_key_label=None, labels=LABELS,
+#     xmax=X_MAX, palette=PALETTE)
+
+# All N_i normalized.
+plot.plot_distribution(
+    out['sizes'], TRAITS,
+    np.concatenate([out_n['irr'], [out_n['red'][0]], davg, davg_arit]),
+    fig_name=f'comparison_N_v{TRAITS[0]}-{TRAITS[1]}',
+    is_normalized_by_v=True, fig_dir=FIG_DIR, y_key_label=None, labels=LABELS,
+    xmax=X_MAX, palette=PALETTE)
+
+
+# FIGURE 4 (case  A/B, M = 2)
+# ---------------------------
+
+# Growth rate and traits: tau(i, x)= TRAITS[i].
+TRAITS_S = [np.array([0.5, 2.5]), np.array([1.4, 1.6])]
+
+KAPPA_COEFS = np.linspace(0, 1, 101)
+
+for traits in TRAITS_S:
+    fv.compute_n_plot_heatmap_veff_wrt_kappa_constant(
+        KAPPA_COEFS, traits, PAR_BETA_CONSTANT[1], fig_dir=FIG_DIR)
+
+# Alternative visualization.
+TRAITS_S = [np.array([0.5, 2.5]), np.array([2.5, 0.5]), np.array([1, 1.5])]
+
+for traits in TRAITS_S:
+    z = np.zeros((len(KAPPA_COEFS), len(KAPPA_COEFS)))
+    for i in range(len(KAPPA_COEFS)):
+        k1 = KAPPA_COEFS[i]
+        kappas = [np.array([[1-k1, k1], [k2, 1-k2]]) for k2 in KAPPA_COEFS]
+        z[i] = np.array([fv.compute_lambda_2D(
+            kappa, traits, PAR_BETA_CONSTANT[1]) for kappa in kappas])
+    fv.plot_my_surface(KAPPA_COEFS, KAPPA_COEFS, z,  # ticks=np.arange(1, 9),
+                       ticks_labels=["$k_1$", "$k_2$", "Effective fitness"])
+
+
+# FIGURE 6 (case  A/B, M = 2)
+# ---------------------------
+
+# Growth rate and traits: tau(i, x) = TRAITS[i].
+TRAITS = np.array([0.5, 2.5])  # np.array([1.4, 1.6])
+
+# Transition matrix.
+COEFFICIENTS = np.linspace(0.01, 0.99, 21)  # (see below).
+
+
+# Plot
+# > kappa = [[1 - coef, coef], [coef, 1 - coef]], with varying coef.
+fv.compute_n_plot_distribution_bimodal_wrt_kappa(
+    IS_CONSERVATIVE, TRAITS, PAR_BETA_CONSTANT, COEFFICIENTS, fig_dir=FIG_DIR,
+    is_mirror=False, xmax=X_MAX)
+
+# > kappa = [[1 - coef, coef], [1 - coef, coef]], with varying coef.
+fv.compute_n_plot_distribution_bimodal_wrt_kappa(
+    IS_CONSERVATIVE, TRAITS, PAR_BETA_CONSTANT, COEFFICIENTS, fig_dir=FIG_DIR,
+    is_mirror=True, xmax=X_MAX)
+
+
+# FIGURE 7 (Case A/B, M > 2)
+# --------------------------
+
+# Random seed (for reproducible figures. Uncomment to generate new random).
+np.random.seed(9)
+
+# > Varying number of traits M at v_min, v_max fixed.
+V_MIN = 1
+V_MAX = 7
+TRAIT_COUNTS = np.arange(2, 100)
+
+
+interval_length = V_MAX - V_MIN
+fixed_trait = interval_length / 2 + V_MIN
+
+
+KAPPA_CHOICES = ["diag_n_uniform_specific", "random", "uniform"]
+TRAIT_CHOICE = "uniform"
+
+LABELS = [fv.write_kappa_choice(kchoice, is_shorten=True) for kchoice in
+          KAPPA_CHOICES]
+fv.plot_v_eff_and_means_w_varying_count_constant(
+    fixed_trait, interval_length, TRAIT_COUNTS, KAPPA_CHOICES,
+    PAR_BETA_CONSTANT[1], FIG_DIR, trait_choice=TRAIT_CHOICE, labels=LABELS)
+
+
+# FIGURE 8 (case  A/B, M > 2)
+# ---------------------------
+
+V_MID = 4
+INTERVAL_LENGTHS = np.linspace(0.01, 3, 21)  # np.linspace(0.01, 3)
+
+TRAIT_COUNT = 10
+DIAGS = [.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+
+fv.plot_v_eff_and_means_w_varying_std_n_correlation(
+    DIAGS, V_MID, INTERVAL_LENGTHS, TRAIT_COUNT, PAR_BETA_CONSTANT[1], FIG_DIR,
+    is_classic_mean=True, is_title=False, is_small_only=True)
+
+fv.plot_v_eff_and_means_w_varying_std_n_correlation(
+    DIAGS, V_MID, INTERVAL_LENGTHS, TRAIT_COUNT, PAR_BETA_CONSTANT[1], FIG_DIR,
+    conserved_mean="geometric", is_classic_mean=True, is_title=False,
+    is_small_only=True)
+
+fv.plot_v_eff_and_means_w_varying_std_n_correlation(
+    DIAGS, V_MID, INTERVAL_LENGTHS, TRAIT_COUNT, PAR_BETA_CONSTANT[1], FIG_DIR,
+    conserved_mean="harmonic", is_classic_mean=True, is_title=False,
+    is_small_only=True)
+
+
+# FIGURES 9 (Case A/B, M > 2)
+# ---------------------------
+
+# > Varying variance for V centered in v_mid, at v_mid and M fixed.
+V_MID = 4
+INTERVAL_LENGTHS = np.linspace(0.1, 3)
+
+
+KAPPA_CHOICES = ["diag_n_uniform", "diag_n_uniform", "diag_n_uniform_specific",
+                 "random", "uniform"]
+TRAIT_CHOICE = "uniform"
+DIAGS = [0.8, 0.2]
+
+LABELS = [fv.write_kappa_choice(KAPPA_CHOICES[i], diag=DIAGS[i],
+                                is_shorten=True) for i in range(2)]
+LABELS.extend([fv.write_kappa_choice(kchoice, is_shorten=True) for kchoice in
+               KAPPA_CHOICES[2:]])
+
+TRAIT_COUNT = 10
+fv.plot_v_eff_and_means_w_varying_std_constant(
+    V_MID, INTERVAL_LENGTHS, TRAIT_COUNT, KAPPA_CHOICES, PAR_BETA_CONSTANT[1],
+    FIG_DIR, TRAIT_CHOICE, diag=DIAGS, labels=LABELS, bbox_to_anchor=(1, 1))
+
+TRAIT_COUNT = 100
+fv.plot_v_eff_and_means_w_varying_std_constant(
+    V_MID, INTERVAL_LENGTHS, TRAIT_COUNT, KAPPA_CHOICES, PAR_BETA_CONSTANT[1],
+    FIG_DIR, TRAIT_CHOICE, diag=DIAGS, labels=LABELS, bbox_to_anchor=(1, 1))
+
+
+# FIGURES 10 (M > 2)
+# ------------------
+
+
+# Equal mitosis, linear tau, constant beta.
+
+V_MID = 4
+INTERVAL_LENGTHS = np.linspace(0.01, 3, 21)
+TRAIT_COUNT = 10
+DIAGS = [.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+
+fv.plot_v_eff_and_means_w_varying_std_n_correlation(
+    DIAGS, V_MID, INTERVAL_LENGTHS, TRAIT_COUNT, PAR_BETA_CONSTANT, FIG_DIR,
+    is_classic_mean=True, is_title=False, is_small_only=True,
+    case_coef='linear')
+
+
+fv.plot_v_eff_and_means_w_varying_std_n_correlation(
+    DIAGS, V_MID, INTERVAL_LENGTHS, TRAIT_COUNT, PAR_BETA_CONSTANT, FIG_DIR,
+    conserved_mean="geometric",  is_classic_mean=True, is_title=False,
+    is_small_only=True, case_coef='linear')
+
+fv.plot_v_eff_and_means_w_varying_std_n_correlation(
+    DIAGS, V_MID, INTERVAL_LENGTHS, TRAIT_COUNT, PAR_BETA_CONSTANT, FIG_DIR,
+    conserved_mean="harmonic",  is_classic_mean=True, is_title=False,
+    is_small_only=True, case_coef='linear')
+
+
+# Equal mitosis, linear tau, linear beta.
+
+fv.plot_v_eff_and_means_w_varying_std_n_correlation(
+    DIAGS, V_MID, INTERVAL_LENGTHS, TRAIT_COUNT, PAR_BETA_LINEAR, FIG_DIR,
+    is_classic_mean=True, is_title=False, is_small_only=True,
+    case_coef='linear')
+
+fv.plot_v_eff_and_means_w_varying_std_n_correlation(
+    DIAGS, V_MID, INTERVAL_LENGTHS, TRAIT_COUNT, PAR_BETA_LINEAR, FIG_DIR,
+    conserved_mean="geometric",  is_classic_mean=True, is_title=False,
+    is_small_only=True, case_coef='linear')
+
+fv.plot_v_eff_and_means_w_varying_std_n_correlation(
+    DIAGS, V_MID, INTERVAL_LENGTHS, TRAIT_COUNT, PAR_BETA_LINEAR, FIG_DIR,
+    conserved_mean="harmonic",  is_classic_mean=True, is_title=False,
+    is_small_only=True, case_coef='linear')

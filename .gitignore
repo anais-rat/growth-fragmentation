@@ -1,10 +1,12 @@
 # NEW
 *~
+
 data/
 figures/
 ignore/
 main/2023_article_Rat-Tournus/
 main/2023_thesis/
+main/2024_article_Doumic-Rat-Tournus/ignored/
 src/parameters/figures_paper2.py
 src/scheme_direct_dissipativity.py
 to_process/
