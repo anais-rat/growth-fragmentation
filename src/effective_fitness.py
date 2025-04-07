@@ -998,7 +998,10 @@ def plot_v_eff_and_means_w_varying_std_n_correlation(
         if is_title:
             plt.title(write_kappa_choice('diag_n_uniform'), pad=10,
                       loc='right')
+        else:
+            to_add = to_add + "_no-title"
         if is_classic_mean:
+            to_add = to_add + "_w-means"
             for key, means in means_s.items():
                 if key == 'arithmetic':
                     plt.plot(interval_lengths, means, color='red',
