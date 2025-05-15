@@ -4,6 +4,10 @@
 Created on Wed Nov  9 15:29:04 2022
 
 @author: arat
+
+Note: For Arxiv compatible figure names, IS_ARXIV_FRIENDY_FIG_NAMES must be set
+      to True (used in `effective_fitness.py` and `plot.py`).
+
 """
 
 import numpy as np
@@ -17,6 +21,47 @@ projet_dir = os.path.dirname(current_dir)
 FOLDER_DAT = join(projet_dir, "data")
 FOLDER_FIG = join(projet_dir, "figures")
 FOLDER_VID = join(projet_dir, "videos")
+
+IS_ARXIV_FRIENDY_FIG_NAMES = True
+
+
+def separate_directory_from_file(file_path):
+    """Return the file name and its directory path from the file path."""
+    print(file_path)
+    idx = len(file_path) - 1 - file_path[::-1].find(os.path.sep)
+    file_dir = file_path[:idx]
+    file_name = file_path[idx+1:]
+    print(file_dir, file_name)
+    return file_dir, file_name
+
+
+if IS_ARXIV_FRIENDY_FIG_NAMES:
+    def remove_special_caraters(string, extension='pdf', is_path=True):
+        """Return the string without special caracters: ., [, ] (other to add).
+
+        Needed for the name of saved figure to submit to arXiv or HAL!
+        If the string comes with an extension `extension` the dot in
+        '.extension' is conserved
+        """
+        if is_path:
+            file_dir, file_name = separate_directory_from_file(string)
+            return join(file_dir, remove_special_caraters(file_name, extension,
+                                                          is_path=False))
+        ext_len = len(extension)
+        if string[-ext_len:] != extension:
+            extension = ''
+        string_ok = string.replace('0.', 'p')
+        string_ok = string_ok.replace('.', 'p')
+        string_ok = string_ok.replace(']', '')
+        string_ok = string_ok.replace('[', '')
+        if extension != '':
+            string_ok = string_ok[:-ext_len-1] + '.' + extension
+        return string_ok
+
+else:
+    def remove_special_caraters(string, extension='pdf'):
+        """Return identical object."""
+        return string
 
 
 def list_to_strings(list_to_write, decimal_count=None):

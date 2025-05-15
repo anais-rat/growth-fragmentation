@@ -7,6 +7,8 @@ Created on Thu Feb 10 16:38:02 2022
 
 Note: Depending on the publication trait may be used equivalently to feature.
       Here we use trait.
+      For Arxiv compatible figure names, IS_ARXIV_FRIENDY_FIG_NAMES must be set
+      to True in `write_path.py`.
 
 """
 
@@ -73,6 +75,7 @@ PAR_GRIDS_CONSTANT_LONGTIME = [DX, X_COUNT, PERIOD_COUNT]
 
 # Plot
 # ----
+
 FOLDER = wp.FOLDER_FIG
 
 LABELS = {'arithmetic': r"$m_A$",  # r"$\mathrm{arithmetic~mean}$",
@@ -719,7 +722,7 @@ def plot_2D_v_eff_and_mean_wrt_traits_constant(
         path = write_fig_path(fig_directory, 'v_and_means_M2_wrt_1v_' +
                               f'kappa{write_matrix(kappa_s)}.pdf')
         # feature replaced by v in the figure name !!!!!!
-        plt.savefig(path, bbox_inches='tight')
+        plt.savefig(wp.remove_special_caraters(path), bbox_inches='tight')
     plt.show()
     return lambdas_s
 
@@ -788,7 +791,7 @@ def plot_v_eff_and_means_w_varying_count_constant(
     if not isinstance(fig_directory, type(None)):
         path = write_fig_path(fig_directory, 'v_and_means_wrt_M_kappa-' +
                               f'{name_kappa}_V-{trait_choice}.pdf')
-        plt.savefig(path, bbox_inches='tight')
+        plt.savefig(wp.remove_special_caraters(path), bbox_inches='tight')
     plt.show()
     return lambdas_s
 
@@ -865,7 +868,7 @@ def plot_v_eff_and_means_w_varying_std_constant(
         path = write_fig_path(
             fig_directory, f'v_and_means_M{trait_count}' +
             f'_wrt_std_kappa-{name_kappa}_V-{trait_choice}.pdf')
-        plt.savefig(path, bbox_inches='tight')
+        plt.savefig(wp.remove_special_caraters(path), bbox_inches='tight')
     plt.show()
     plt.clf()
 
@@ -884,7 +887,7 @@ def plot_v_eff_and_means_w_varying_std_constant(
     #     path = write_fig_path(
     #         fig_directory, f'v_and_means_M{trait_count}_wrt_std_kappa-' +
     #         f'{kappa_choice1}_V-{trait_choice}_small.pdf')
-    #     plt.savefig(path, bbox_inches='tight')
+    #     plt.savefig(wp.remove_special_caraters(path), bbox_inches='tight')
     # plt.show()
     return lambdas_s
 
@@ -974,7 +977,8 @@ def plot_v_eff_and_means_w_varying_std_n_correlation(
                     fig_directory,
                     f'v_and_means_M{trait_count}_wrt_std_n_correlations' +
                     f'{diags[0]}-{diags[-1]}-{len(diags)}{to_add}.pdf')
-                plt.savefig(path, bbox_inches='tight')
+                plt.savefig(wp.remove_special_caraters(path),
+                            bbox_inches='tight')
         plt.show()
 
     # Plot.
@@ -1021,7 +1025,7 @@ def plot_v_eff_and_means_w_varying_std_n_correlation(
                 fig_directory,
                 f'v_and_means_M{trait_count}_wrt_std_n_correlations' +
                 f'{diags[0]}-{diags[-1]}-{len(diags)}_small{to_add}.pdf')
-            plt.savefig(path, bbox_inches='tight')
+            plt.savefig(wp.remove_special_caraters(path), bbox_inches='tight')
         plt.show()
     return lambdas
 
@@ -1098,7 +1102,7 @@ def compute_n_plot_heatmap_veff_wrt_kappa_constant(
     if not isinstance(fig_dir, type(None)):
         path = write_fig_path(
             fig_dir, f'heatmap_lambda_v{wp.list_to_string(traits)}.pdf')
-        plt.savefig(path, bbox_inches='tight')
+        plt.savefig(wp.remove_special_caraters(path), bbox_inches='tight')
     plt.show()
 
     if is_mass:
@@ -1118,7 +1122,7 @@ def compute_n_plot_heatmap_veff_wrt_kappa_constant(
         if not isinstance(fig_dir, type(None)):
             path = write_fig_path(
                 fig_dir, f'heatmap_mass_v{wp.list_to_string(traits)}.pdf')
-            plt.savefig(path, bbox_inches='tight')
+            plt.savefig(wp.remove_special_caraters(path), bbox_inches='tight')
         plt.show()
     return heatmap
 
@@ -1170,24 +1174,52 @@ def compute_longtime_approximation_2D_mix_vs_irr(
 
 
 def compute_n_plot_distribution_bimodal_wrt_kappa(
-        is_conservative, traits, par_beta, kappa_coefficients,
-        par_ninit=PAR_N_INIT_LONGTIME, par_grids=PAR_GRIDS_CONSTANT_LONGTIME,
-        fig_dir=None, is_mirror=False, xmax=None):
+        is_conservative, traits, par_beta, kappa_varying_coefs,
+        kappa_fixed_coef=None, par_ninit=PAR_N_INIT_LONGTIME,
+        par_grids=PAR_GRIDS_CONSTANT_LONGTIME, fig_dir=None,
+        is_no_heredity=False, xmax=None):
+    """ Plot (N_1, N_2) (bimodal case) with respect to kappa.
+
+    Parameters
+    ----------
+    traits : ndarray
+        Array of the two (orderred) individual traits (v_1, v_2).
+    kappa_varying_coefs : ndarray
+        1D array of the coefficients of kappa to make vary.
+    kappa_fixed_coef : list or None
+        None : kappa_11 = Kappa_22 (if is_no_heredity is False)
+              or kappa_11 = Kappa_21 (if is_no_heredity is True), with
+              kappa_12 varying as prescribed by kappa_varying_coefs.
+        list of the form (i, kappa_i1): a row is fixed in kappa, whose index
+             and value is prescribed by kappa_fixed_coefs. The extradiagonal
+             coef of the other row varies as kappa_varying_coefs.
+    """
 
     # Création de la figure et d'un axe 3D
     fig = plt.figure(figsize=((6.4, 6)))
     ax = fig.add_subplot(111, projection='3d')
     z = []
-    for cc in kappa_coefficients[::None]:
+    for cc in kappa_varying_coefs[::None]:
         coef = 1 - cc
-        if is_mirror:
-            kappa = np.array([[1 - coef, coef], [1 - coef, coef]])
-            ylabel = r"$k_1=1-k_2$"
-            name_end = "k1_1-k2"
+        if isinstance(kappa_fixed_coef, type(None)):
+            if is_no_heredity:
+                kappa = np.array([[1 - coef, coef], [1 - coef, coef]])
+                ylabel = r"$k_1=1-k_2$"
+                name_end = "k1_1-k2"
+            else:
+                kappa = np.array([[1 - coef, coef], [coef, 1 - coef]])
+                ylabel = r"$k_1=k_2$"
+                name_end = "k1_k2"
         else:
-            kappa = np.array([[1 - coef, coef], [coef, 1 - coef]])
-            ylabel = r"$k_1=k_2$"
-            name_end = "k1_k2"
+            coef0 = kappa_fixed_coef[1]
+            if kappa_fixed_coef[0] == 0:  # First row fixed.
+                kappa = np.array([[coef0, 1 - coef0], [coef, 1 - coef]])
+                ylabel = r"$k_2$"
+                name_end = f"k2_k1-{1 - coef0:.1f}"
+            else:  # Second row fixed.
+                kappa = np.array([[1 - coef, coef], [coef0, 1 - coef0]])
+                ylabel = r"$k_1$"
+                name_end = f"k1_k2-{coef0:.1f}"
 
         out = compute_longtime_approximation_2D_mix_vs_irr(
             is_conservative, traits, par_beta, kappa, par_ninit, par_grids,
@@ -1232,7 +1264,7 @@ def compute_n_plot_distribution_bimodal_wrt_kappa(
     if not isinstance(fig_dir, type(None)):
         path = write_fig_path(
             fig_dir, f'N_v{wp.list_to_string(traits)}_wrt_{name_end}.pdf')
-        plt.savefig(path, bbox_inches='tight')
+        plt.savefig(wp.remove_special_caraters(path), bbox_inches='tight')
     plt.show()
 
     # plot_my_surface(out['sizes'], coef, np.concatenate(z), ticks=None,
@@ -1290,6 +1322,6 @@ def approx_lambda_linear(
 #         path = f'{fig_directory}/v_and_means_M{trait_count}_wrt_std_n_' + \
 #                 f'correlations{diags[0]}-{diags[-1]}-{len(diags)}.pdf'
 #         print("Saved at: ", path)
-#         plt.savefig(path, bbox_inches='tight')
+#         plt.savefig(wp.remove_special_caraters(path), bbox_inches='tight')
 #     plt.show()
 #     return lambdas

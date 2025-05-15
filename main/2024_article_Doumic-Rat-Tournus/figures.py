@@ -219,26 +219,48 @@ for traits in TRAITS_S:
                        ticks_labels=["$k_1$", "$k_2$", "Effective fitness"])
 
 
-# FIGURE 6 (case  A/B, M = 2)
-# ---------------------------
+# FIGURE 6, 10 (case  A/B, M = 2)
+# -------------------------------
 
 # Growth rate and traits: tau(i, x) = TRAITS[i].
 TRAITS = np.array([0.5, 2.5])  # np.array([1.4, 1.6])
 
 # Transition matrix.
-COEFFICIENTS = np.linspace(0.01, 0.99, 21)  # (see below).
 
+COEFFICIENTS = np.linspace(0, 1, 21)  # (see below).
 
 # Plot
+# Both row vaying.
 # > kappa = [[1 - coef, coef], [coef, 1 - coef]], with varying coef.
 fv.compute_n_plot_distribution_bimodal_wrt_kappa(
     IS_CONSERVATIVE, TRAITS, PAR_BETA_CONSTANT, COEFFICIENTS, fig_dir=FIG_DIR,
-    is_mirror=False, xmax=X_MAX)
+    is_no_heredity=False, xmax=X_MAX)
 
 # > kappa = [[1 - coef, coef], [1 - coef, coef]], with varying coef.
 fv.compute_n_plot_distribution_bimodal_wrt_kappa(
     IS_CONSERVATIVE, TRAITS, PAR_BETA_CONSTANT, COEFFICIENTS, fig_dir=FIG_DIR,
-    is_mirror=True, xmax=X_MAX)
+    is_no_heredity=True, xmax=X_MAX)
+
+# One row fixed (FIGURE 10).
+# > kappa = [[0.2, 0.8], [coef, 1 - coef]], with varying coef.
+fv.compute_n_plot_distribution_bimodal_wrt_kappa(
+    IS_CONSERVATIVE, TRAITS, PAR_BETA_CONSTANT, COEFFICIENTS,
+    kappa_fixed_coef=(0, 0.2), fig_dir=FIG_DIR, xmax=X_MAX)
+
+# > kappa = [[0.8, 0.2], [coef, 1 - coef]], with varying coef.
+fv.compute_n_plot_distribution_bimodal_wrt_kappa(
+    IS_CONSERVATIVE, TRAITS, PAR_BETA_CONSTANT, COEFFICIENTS,
+    kappa_fixed_coef=(0, 0.8), fig_dir=FIG_DIR, xmax=X_MAX)
+
+# > kappa = [[1 - coef, coef], [0.2, 0.8]], with varying coef.
+fv.compute_n_plot_distribution_bimodal_wrt_kappa(
+    IS_CONSERVATIVE, TRAITS, PAR_BETA_CONSTANT, COEFFICIENTS,
+    kappa_fixed_coef=(1, 0.2), fig_dir=FIG_DIR, xmax=X_MAX)
+
+# > kappa = [[1 - coef, coef], [0.8, 0.2]], with varying coef.
+fv.compute_n_plot_distribution_bimodal_wrt_kappa(
+    IS_CONSERVATIVE, TRAITS, PAR_BETA_CONSTANT, COEFFICIENTS,
+    kappa_fixed_coef=(1, 0.8), fig_dir=FIG_DIR, xmax=X_MAX)
 
 
 # FIGURE 7 (Case A/B, M > 2)
