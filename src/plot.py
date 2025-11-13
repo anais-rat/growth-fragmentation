@@ -310,7 +310,8 @@ def plot_distribution_old(
 def plot_distribution(
         sizes, features, distribution, fig_name='', fig_dir=None,
         kappa=None, y_key_label='y_density', is_normalized=False,
-        is_normalized_by_v=False, labels=None, xmax=None, palette='viridis'):
+        is_normalized_by_v=False, labels=None, xmax=None, palette='viridis',
+        fig_format="pdf"):
     """Plot the initial distribution and save it if `fig_dir` is not None.
 
     Distrib. given by `distribution` at sizes `sizes` and traits `features`.
@@ -368,8 +369,9 @@ def plot_distribution(
     plt.legend(fontsize='large')  # (borderaxespad=2)
 
     if fig_dir is not None:
-        path = write_fig_path(fig_dir, f'{fig_name}.pdf')
-        plt.savefig(remove_special_caraters(path), bbox_inches='tight')
+        path = write_fig_path(fig_dir, fig_name)
+        plt.savefig(remove_special_caraters(path) + "." + fig_format,
+                    bbox_inches='tight', format=fig_format)
     plt.show()
 
 

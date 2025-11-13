@@ -10,6 +10,8 @@ Note: Depending on the publication trait may be used equivalently to feature.
       For Arxiv compatible figure names, IS_ARXIV_FRIENDY_FIG_NAMES must be set
       to True in `write_path.py`.
 
+TO DO: change optionnal rng argument to mandatory.
+
 """
 
 from copy import deepcopy
@@ -364,7 +366,7 @@ def is_irreducible(non_negative_matrix):
 # > Generate sets of traits.
 
 def generate_numbers(mid_point, interval_length, number_count,
-                     trait_choice='uniform'):
+                     trait_choice='uniform', rng=None):
     """ Generate `number_count` floats distributed on an interval of length
     `interval_length` around `mid_point`.
     If `trait_choice` is 'uniform' (default option) the numbers are
@@ -372,16 +374,18 @@ def generate_numbers(mid_point, interval_length, number_count,
     law on the interval.
 
     """
+    rng = np.random.default_rng(rng)
     vmin = mid_point - interval_length / 2
     vmax = mid_point + interval_length / 2
     if trait_choice == 'uniform':
         return np.linspace(vmin, vmax, number_count)
     if trait_choice == 'random':
-        return np.sort(np.random.uniform(vmin, vmax, number_count))
+        return np.sort(rng.uniform(vmin, vmax, number_count))
 
 
 def generate_numbers_w_varying_std(mid_point, interval_lengths,
-                                   number_count, trait_choice='uniform'):
+                                   number_count, trait_choice='uniform',
+                                   rng=None):
     """ Generate `set_count` sets of `number_count` floats distributed
     > regularly if `trait_choice` is 'uniform' (default option)
     > randomly according to a uniform law if `trait_choice` is 'random'
@@ -399,14 +403,16 @@ def generate_numbers_w_varying_std(mid_point, interval_lengths,
         Number of numbers in each interval.
 
     """
+    rng = np.random.default_rng(rng)
     numbers_s = [generate_numbers(mid_point, interval_length, number_count,
-                                  trait_choice)
+                                  trait_choice, rng)
                  for interval_length in interval_lengths]
     return numbers_s
 
 
 def generate_numbers_w_varying_count(mid_point, interval_length,
-                                     number_counts, trait_choice='uniform'):
+                                     number_counts, trait_choice='uniform', 
+                                     rng=None):
     """ Generate `set_count` sets of varying number of floats (given by
     `number_counts`) distributed
     > regularly if `trait_choice` is 'uniform' (default option)
@@ -425,8 +431,9 @@ def generate_numbers_w_varying_count(mid_point, interval_length,
         Way to chose floats in the interval I.
 
     """
+    rng = np.random.default_rng(rng)
     numbers_s = [generate_numbers(mid_point, interval_length, number_count,
-                                  trait_choice)
+                                  trait_choice, rng=rng)
                  for number_count in number_counts]
     return numbers_s
 
@@ -463,12 +470,12 @@ def compute_specific_diag(trait_count):
     return 0.5 * (1 + 1 / trait_count)
 
 
-def uniform_stochastic_matrix(n):
-    M = np.random.exponential(scale=1.0, size=(n, n))  # Tirage exponentiel
+def uniform_stochastic_matrix(n, rng):
+    M = rng.exponential(scale=1.0, size=(n, n))  # Tirage exponentiel
     return M / M.sum(axis=1, keepdims=True)  # Normalisation ligne par ligne
 
 
-def generate_kappa(traits, kappa_choice, diag=None):
+def generate_kappa(traits, kappa_choice, diag=None, rng=None):
     """ Generates a transition matrix (stochastic and a priori irreducible)
     according to the method specified by `kappa_choice`.
 
@@ -500,11 +507,13 @@ def generate_kappa(traits, kappa_choice, diag=None):
          2D array (trait_count, trait_count) a stochatic matrix.
 
     """
+    rng = np.random.default_rng(rng)
     trait_count = len(traits)
     if kappa_choice == "uniform":
         return np.ones((trait_count, trait_count)) / trait_count
     if kappa_choice == "random":
-        kappa = np.random.rand(trait_count, trait_count)
+        kappa = rng.uniform(size=(trait_count, trait_count))
+        # np.random.rand(trait_count, trait_count)
         if not is_irreducible(kappa):
             print(kappa)
             raise ValueError('Reducible kappa generated')
@@ -525,8 +534,8 @@ def generate_kappa(traits, kappa_choice, diag=None):
         for row_idx in range(trait_count):
             kappa[row_idx] = kappa_limit(traits, row_idx, SIGMA)
     if kappa_choice == "uniform_stochastic":
-        kappa = np.random.exponential(scale=1.0,
-                                      size=(trait_count, trait_count))
+        rng
+        kappa = rng.exponential(scale=1.0, size=(trait_count, trait_count))
         return kappa / kappa.sum(axis=1, keepdims=True)  # Normalisation.
     return kappa
 
@@ -587,18 +596,18 @@ def write_kappa_choice(kappa_choice, diag=None, is_shorten=False):
     k_str = r"(\kappa_{{_M}})_"
     if kappa_choice == 'diag_n_uniform':
         if isinstance(diag, type(None)):
-            end = rf'${k_str}{{ij}} = ' + r'\frac{1-\alpha}{M-1}, \; i \neq j$'
+            end = rf'${k_str}{{ij}} = ' + r'\frac{1-\alpha}{M-1}, \; \, {{\scriptstyle i \neq j}}$'
             if is_shorten:
                 return end
             return rf'${k_str}{{ii}} = \alpha, \quad $' + end
         one_minus_diag = '0.1%f' % (1.-diag)
         one_minus_diag = one_minus_diag[3:6]
-        end = rf'${k_str}{{ij}}=\frac{{{one_minus_diag}}}{{M-1}}, \; i \neq j$'
+        end = rf'${k_str}{{ij}}=\frac{{{one_minus_diag}}}{{M-1}}, \; \, {{\scriptstyle i \neq j}}$'
         if is_shorten:
             return end
         return rf'${k_str}{{ii}} = {diag}, \quad $' + end
     if kappa_choice == 'diag_n_uniform_specific':
-        end = rf'${k_str}{{ij}} = \frac{{1}}{{2M}}, \; i \neq j$'
+        end = rf'${k_str}{{ij}} = \frac{{1}}{{2M}}, \; \, {{\scriptstyle i \neq j}}$'
         if is_shorten:
             return end
         return rf'${k_str}{{ii}} = \frac{{M+1}}{{2M}}, \quad $' + end
@@ -624,7 +633,7 @@ def rearange_2D_kappa(kappa):
 def plot_2D_v_eff_and_mean_wrt_traits_constant(
         kappas, fixed_trait, traits, beta, fig_directory,
         is_error_plotted=False, is_mirror=True, palette='rocket', labels=None,
-        bbox_to_anchor=None):
+        bbox_to_anchor=None, fig_format="pdf"):
     """Plot the effective trait `v_eff` and theoretical means w.r.t. traits.
 
     Constant coefficients case: tau(v,x)=v, beta(x)=beta, gamma(v,x)=v beta.
@@ -657,6 +666,11 @@ def plot_2D_v_eff_and_mean_wrt_traits_constant(
     linestyles = ['-', '-', '-', '-', ':', '-', '-.', '-', ':', '-', '-.']
 
     PALETTE = sns.color_palette(palette, len(kappa_s))
+    default_lwidth = sns.plotting_context()['lines.linewidth']
+
+    color_means = "black"
+    markers = {'arithmetic': "p", 'geometric': "o", 'harmonic': "s"}
+    marker_sizes = {'arithmetic': 7, 'geometric': 5, 'harmonic': 5}
 
     # Compute.
     means_s = compute_means_of_2(fixed_trait, traits)
@@ -694,7 +708,6 @@ def plot_2D_v_eff_and_mean_wrt_traits_constant(
                      label=r"$\lambda_{th}-\lambda_{app}$")
             plt.text(.7, 0.15, write_traits(r'\{{ v_1, v_2 \}}'),
                      transform=ax.transAxes)
-        print(labels[idx], kappa_s[idx], "!!!")
         plt.plot(traits, lambdas_s[idx] / beta, label=labels[idx],
                  linestyle=linestyles[idx], color=PALETTE[idx])
         if len(kappa_s) == 1:
@@ -702,27 +715,40 @@ def plot_2D_v_eff_and_mean_wrt_traits_constant(
                      + '\n' + write_pmatrix(kappa_s[0]),
                      transform=ax.transAxes)
     # > Classical means.
-    color_means = "red"
-    default_lwidth = sns.plotting_context()['lines.linewidth']
     for key, mean in means_s.items():
-        if key == 'arithmetic':
-            plt.plot(traits, mean, label=LABELS_MEANS, linestyle='--',
-                     linewidth=.85 * default_lwidth, color=color_means)
-        else:
-            plt.plot(traits, mean, color=color_means, linestyle='--',
-                     linewidth=.85 * default_lwidth)
+        plt.plot(
+            traits, mean,
+            color=color_means,
+            linestyle='-',
+            linewidth=0.5 * default_lwidth,
+            marker=markers[key],
+            markersize=marker_sizes[key],
+            markevery=8,
+            markerfacecolor='white',
+            markeredgecolor=color_means,
+            alpha=0.6,
+            label=LABELS[key],
+            zorder=1,
+            )
     ax.xaxis.set_major_locator(ticker.MultipleLocator(base=1))
-    plt.legend(  # loc="lower right", fontsize="small",
-               bbox_to_anchor=bbox_to_anchor)
+    # Legend for kappa (1 column).
+    leg1 = plt.legend(handles=plt.gca().get_lines()[:len(kappa_s)],
+                      bbox_to_anchor=bbox_to_anchor, 
+                      loc="upper left")
+    plt.gca().add_artist(leg1)
+    # Legend for means (3 columns).
+    plt.legend(handles=plt.gca().get_lines()[-3:], ncol=3, loc="lower right",
+               columnspacing=0.6)
     plt.xlabel(r"Trait $v^*$", labelpad=6)  # Feature $v^*$", labelpad=6)
     plt.ylabel(r"Effective trait $v$", labelpad=8)  # fitness
     sns.despine()
     format_ticks_2D(format_x='%.0f', format_y='%.0f')
     if not isinstance(fig_directory, type(None)):
         path = write_fig_path(fig_directory, 'v_and_means_M2_wrt_1v_' +
-                              f'kappa{write_matrix(kappa_s)}.pdf')
+                              f'kappa{write_matrix(kappa_s)}')
         # feature replaced by v in the figure name !!!!!!
-        plt.savefig(wp.remove_special_caraters(path), bbox_inches='tight')
+        plt.savefig(wp.remove_special_caraters(path) + f".{fig_format}",
+                    bbox_inches='tight', format=fig_format)
     plt.show()
     return lambdas_s
 
@@ -730,7 +756,8 @@ def plot_2D_v_eff_and_mean_wrt_traits_constant(
 def plot_v_eff_and_means_w_varying_count_constant(
         fixed_trait, interval_length, trait_counts, kappa_choice, beta,
         fig_directory, trait_choice="uniform", diag=0.5, palette='rocket',
-        labels=None):
+        labels=None, bbox_to_anchor=None, rng=None, fig_format="pdf"):
+    rng = np.random.default_rng(rng)
 
     if isinstance(kappa_choice, list):
         kappa_choices = deepcopy(kappa_choice)
@@ -748,12 +775,17 @@ def plot_v_eff_and_means_w_varying_count_constant(
     labels = labels or [LABELS['v_eff']] * curve_count
     linestyles = ['-', '-', '-', '-', ':', '-', '-.', '-', ':', '-', '-.']
     PALETTE = sns.color_palette(palette, curve_count)
+    default_lwidth = sns.plotting_context()['lines.linewidth']
+
+    color_means = "black"
+    markers = {'arithmetic': "p", 'geometric': "o", 'harmonic': "s"}
+    marker_sizes = {'arithmetic': 7, 'geometric': 5, 'harmonic': 5}
 
     # Compute.
     traits_s = generate_numbers_w_varying_count(
-        fixed_trait, interval_length, trait_counts, trait_choice)
-    kappas_s = [[generate_kappa(v, kappa_choices[i], diag=diags[i]) for v in
-                 traits_s] for i in range(curve_count)]
+        fixed_trait, interval_length, trait_counts, trait_choice, rng=rng)
+    kappas_s = [[generate_kappa(v, kappa_choices[i], diag=diags[i], rng=rng)
+                 for v in traits_s] for i in range(curve_count)]
     lambdas_s = [np.array([approx_lambda_constant(
         kappas[i], traits_s[i], beta) for i in range(len(traits_s))]) for
         kappas in kappas_s]
@@ -764,23 +796,35 @@ def plot_v_eff_and_means_w_varying_count_constant(
     for idx in range(curve_count):
         plt.plot(trait_counts, lambdas_s[idx] / beta,
                  label=labels[idx], linestyle=linestyles[idx],
-                 color=PALETTE[idx])
+                 color=PALETTE[idx], zorder=-(idx+1))
         if len(kappa_choices) == 1:
             plt.title(write_kappa_choice(kappa_choice, diags[idx]), pad=8,
                       loc='right')
         if kappa_choices[idx] == 'diag_n_uniform':
             kappa_choices[idx] = kappa_choices[idx] + str(diags[idx])
     # > Classical means.
-    color_means = "red"
-    default_lwidth = sns.plotting_context()['lines.linewidth']
     for key, mean in means.items():
-        if key == 'arithmetic':
-            plt.plot(trait_counts, mean, label=LABELS_MEANS, linestyle='--',
-                     linewidth=.85 * default_lwidth, color=color_means)
-        else:
-            plt.plot(trait_counts, mean, color=color_means, linestyle='--',
-                     linewidth=.85 * default_lwidth)
-    plt.legend()
+        plt.plot(
+            trait_counts, mean,
+            color=color_means,
+            linestyle='-',
+            linewidth=0.5 * default_lwidth,
+            marker=markers[key],
+            markersize=marker_sizes[key],
+            markevery=6,
+            markerfacecolor='white',
+            markeredgecolor=color_means,
+            alpha=0.6,
+            label=LABELS[key],
+            zorder=1,
+            )
+    # Legend for kappa (1 column).
+    leg1 = plt.legend(handles=plt.gca().get_lines()[:curve_count],
+                      bbox_to_anchor=bbox_to_anchor)
+    plt.gca().add_artist(leg1)
+    # Legend for means (3 columns).
+    plt.legend(handles=plt.gca().get_lines()[-3:], ncol=3, loc="lower right",
+               columnspacing=0.6)
     plt.ylim(bottom=min(means['harmonic']) * 0.8)
     plt.xlabel(r"Number of traits $M$", labelpad=6)  # traits
     format_ticks_2D(format_x='%.0f', format_y='%.1f')
@@ -790,8 +834,9 @@ def plot_v_eff_and_means_w_varying_count_constant(
     name_kappa = wp.list_to_string(kappa_choices)
     if not isinstance(fig_directory, type(None)):
         path = write_fig_path(fig_directory, 'v_and_means_wrt_M_kappa-' +
-                              f'{name_kappa}_V-{trait_choice}.pdf')
-        plt.savefig(wp.remove_special_caraters(path), bbox_inches='tight')
+                              f'{name_kappa}_V-{trait_choice}')
+        plt.savefig(wp.remove_special_caraters(path)  + f".{fig_format}",
+                    bbox_inches='tight', format=fig_format)
     plt.show()
     return lambdas_s
 
@@ -799,7 +844,9 @@ def plot_v_eff_and_means_w_varying_count_constant(
 def plot_v_eff_and_means_w_varying_std_constant(
         fixed_trait, interval_lengths, trait_count, kappa_choice, beta,
         fig_directory, trait_choice, diag=0.5, is_legend=True,
-        palette='rocket', labels=None, bbox_to_anchor=None):
+        palette='rocket', labels=None, bbox_to_anchor=None, rng=None,
+        fig_format="pdf"):
+    rng = np.random.default_rng(rng)
 
     if isinstance(kappa_choice, list):
         kappa_choices = deepcopy(kappa_choice)
@@ -819,14 +866,23 @@ def plot_v_eff_and_means_w_varying_std_constant(
             diags[idx] = diag
 
     labels = labels or [LABELS['v_eff']] * curve_count
-    linestyles = ['-', '-', '-', '-', ':', '-', '-.', '-', ':', '-', '-.']
+    # linestyles = ['-', '-', '-', ':', '-', '-', '-.', '-', ':', '-', '-.']
     PALETTE = sns.color_palette(palette, curve_count)
+    default_lwidth = sns.plotting_context()['lines.linewidth']
+    linestyles, zorders = [], []
+    for choice in kappa_choices:
+        if choice == 'uniform':
+            linestyles.append('--')
+            zorders.append(3)
+        else:
+            linestyles.append('-')
+            zorders.append(2)
 
     # Compute.
     traits_s = generate_numbers_w_varying_std(fixed_trait, interval_lengths,
-                                              trait_count, trait_choice)
-    kappas_s = [[generate_kappa(traits, kappa_choices[i], diag=diags[i]) for
-                 traits in traits_s] for i in range(curve_count)]
+                                              trait_count, trait_choice, rng=rng)
+    kappas_s = [[generate_kappa(traits, kappa_choices[i], diag=diags[i], rng=rng)
+                 for traits in traits_s] for i in range(curve_count)]
     lambdas_s = [np.array([approx_lambda_constant(
         kappas[i], traits_s[i], beta) for i in range(len(traits_s))]) for
         kappas in kappas_s]
@@ -836,8 +892,11 @@ def plot_v_eff_and_means_w_varying_std_constant(
     plt.figure(figsize=figsize)
     idx_diag = 0
     for idx in range(curve_count):
+        alpha = 1 if idx == 4 else 0.8
+        factor = 1 if idx == 4 else 0.9
         plt.plot(interval_lengths, lambdas_s[idx] / beta, label=labels[idx],
-                 linestyle=linestyles[idx], color=PALETTE[idx])
+                 linestyle=linestyles[idx], color=PALETTE[idx], alpha=alpha,
+                 linewidth=factor * default_lwidth, zorder=zorders[idx])
         if len(kappa_choices) == 1:
             plt.title(write_kappa_choice(kappa_choice, diags[idx]), pad=8,
                       loc='right')
@@ -845,16 +904,32 @@ def plot_v_eff_and_means_w_varying_std_constant(
             kappa_choices[idx] = kappa_choices[idx] + str(diags[idx])
 
     # > Classical means.
-    color_means = "red"
-    default_lwidth = sns.plotting_context()['lines.linewidth']
     for key, mean in means.items():
-        if key == 'arithmetic':
-            plt.plot(interval_lengths, mean, label=LABELS_MEANS,
-                     linestyle='--', linewidth=.85 * default_lwidth,
-                     color=color_means)
-        else:
-            plt.plot(interval_lengths, mean, color=color_means, linestyle='--',
-                     linewidth=.85 * default_lwidth)
+        color_means = "black"
+        markers = {'arithmetic': "p", 'geometric': "o", 'harmonic': "s"}
+        marker_sizes = {'arithmetic': 7, 'geometric': 5, 'harmonic': 5}
+
+        # if key == 'arithmetic':
+        #     plt.plot(interval_lengths, mean, label=LABELS_MEANS,
+        #              linestyle='--', linewidth=.85 * default_lwidth,
+        #              color=color_means)
+        # else:
+        #     plt.plot(interval_lengths, mean, color=color_means, linestyle='--',
+        #              linewidth=.85 * default_lwidth)
+        plt.plot(
+            interval_lengths, mean,
+            color=color_means,
+            linestyle='-',
+            linewidth=0.5 * default_lwidth,
+            marker=markers[key],
+            markersize=marker_sizes[key],
+            markevery=3,
+            markerfacecolor='white',
+            markeredgecolor=color_means,
+            alpha=0.6,
+            label=LABELS[key],
+            zorder=1,
+            )
     plt.legend(  # fontsize="small",
                bbox_to_anchor=bbox_to_anchor)
     plt.xlabel(r"Length $\sigma$ of the interval of traits", labelpad=6)  # traits"
@@ -867,8 +942,9 @@ def plot_v_eff_and_means_w_varying_std_constant(
     if not isinstance(fig_directory, type(None)):
         path = write_fig_path(
             fig_directory, f'v_and_means_M{trait_count}' +
-            f'_wrt_std_kappa-{name_kappa}_V-{trait_choice}.pdf')
-        plt.savefig(wp.remove_special_caraters(path), bbox_inches='tight')
+            f'_wrt_std_kappa-{name_kappa}_V-{trait_choice}')
+        plt.savefig(wp.remove_special_caraters(path) + f".{fig_format}", bbox_inches='tight',
+                    format=fig_format)
     plt.show()
     plt.clf()
 
@@ -886,8 +962,9 @@ def plot_v_eff_and_means_w_varying_std_constant(
     # if not isinstance(fig_directory, type(None)):
     #     path = write_fig_path(
     #         fig_directory, f'v_and_means_M{trait_count}_wrt_std_kappa-' +
-    #         f'{kappa_choice1}_V-{trait_choice}_small.pdf')
-    #     plt.savefig(wp.remove_special_caraters(path), bbox_inches='tight')
+    #         f'{kappa_choice1}_V-{trait_choice}_small')
+    #     plt.savefig(wp.remove_special_caraters(path) + f".{fig_format}", bbox_inches='tight',
+    #                    format=fig_format)
     # plt.show()
     return lambdas_s
 
@@ -896,7 +973,7 @@ def plot_v_eff_and_means_w_varying_std_n_correlation(
         diags, fixed_trait, interval_lengths, trait_count, par_beta,
         fig_directory, conserved_mean='arithmetic', is_classic_mean=False,
         is_title=True, is_small_only=False, case_coef="constant",
-        formats=["small"]):
+        formats=["small"], fig_format="pdf"):
     to_add = f'_CV{conserved_mean[:3]}'
     if case_coef == 'constant':
         beta_constant = par_beta
@@ -909,11 +986,15 @@ def plot_v_eff_and_means_w_varying_std_n_correlation(
         raise ValueError('Wrong value for `case_coef`')
     curve_count = len(diags)
     colors = sns.color_palette('viridis', curve_count)
+    color_means = "black"
+    markers = {'arithmetic': "p", 'geometric': "o", 'harmonic': "s"}
+    marker_sizes = {'arithmetic': 5, 'geometric': 5, 'harmonic': 4}
+    default_lwidth = sns.plotting_context()['lines.linewidth']
+
     # Compute.
     if conserved_mean == 'arithmetic':
-        traits_s = generate_numbers_w_varying_std(fixed_trait,
-                                                    interval_lengths,
-                                                    trait_count, 'uniform')
+        traits_s = generate_numbers_w_varying_std(
+            fixed_trait, interval_lengths, trait_count, 'uniform')
     elif conserved_mean == 'geometric':
         csts = np.sqrt(1 + 4 * fixed_trait ** 2 / interval_lengths)
         interval_lengths_geo = np.log((csts + 1) / (csts - 1))
@@ -976,14 +1057,15 @@ def plot_v_eff_and_means_w_varying_std_n_correlation(
                 path = write_fig_path(
                     fig_directory,
                     f'v_and_means_M{trait_count}_wrt_std_n_correlations' +
-                    f'{diags[0]}-{diags[-1]}-{len(diags)}{to_add}.pdf')
-                plt.savefig(wp.remove_special_caraters(path),
-                            bbox_inches='tight')
+                    f'{diags[0]}-{diags[-1]}-{len(diags)}{to_add}')
+                plt.savefig(wp.remove_special_caraters(path) + f".{fig_format}",
+                            bbox_inches='tight', format=fig_format)
         plt.show()
 
     # Plot.
     if 'small' in formats:
-        plt.figure(figsize=(5.4, 3.6))  # Default (6.4, 4.8)
+        fig, ax = plt.subplots(figsize=(5.4, 3.6))  # Default (6.4, 4.8)
+    
         for i in range(curve_count):
             diag = diags[i]
             kappas = [generate_kappa(traits, 'diag_n_uniform', diag=diag) for
@@ -1007,14 +1089,30 @@ def plot_v_eff_and_means_w_varying_std_n_correlation(
         if is_classic_mean:
             to_add = to_add + "_w-means"
             for key, means in means_s.items():
-                if key == 'arithmetic':
-                    plt.plot(interval_lengths, means, color='red',
-                             label=LABELS_MEANS, linestyle='--')
-                else:
-                    plt.plot(interval_lengths, means, color='red',
-                             linestyle='--')
-        plt.legend(title=r"$\alpha$", bbox_to_anchor=(1, 1.15),
-                   loc='upper left', edgecolor='#F0F0F0')
+                # if key == 'arithmetic':
+                #     plt.plot(interval_lengths, means, color='red',
+                #              label=LABELS_MEANS, linestyle='--')
+                # else:
+                #     plt.plot(interval_lengths, means, color='red',
+                #              linestyle='--')
+                plt.plot(
+                    interval_lengths, means,
+                    color=color_means,
+                    linestyle='-',
+                    linewidth=0.5 * default_lwidth,
+                    marker=markers[key],
+                    markersize=marker_sizes[key],
+                    markevery=2,
+                    markerfacecolor='white',
+                    markeredgecolor=color_means,
+                    alpha=0.6,
+                    label=LABELS[key],
+                    zorder=2,
+                    )
+        plt.legend(
+            title=r"$\alpha$", bbox_to_anchor=(1, 1.15),
+            loc='upper left', edgecolor='#F0F0F0',
+            prop={'size': .9 * sns.plotting_context()['legend.fontsize']})
         plt.xlabel(r"Length $\sigma$ of the interval of traits", labelpad=6)
         plt.ylabel(r"Effective trait", labelpad=8)
         format_ticks_2D(format_x='%.0f', format_y='%.1f')
@@ -1024,8 +1122,9 @@ def plot_v_eff_and_means_w_varying_std_n_correlation(
             path = write_fig_path(
                 fig_directory,
                 f'v_and_means_M{trait_count}_wrt_std_n_correlations' +
-                f'{diags[0]}-{diags[-1]}-{len(diags)}_small{to_add}.pdf')
-            plt.savefig(wp.remove_special_caraters(path), bbox_inches='tight')
+                f'{diags[0]}-{diags[-1]}-{len(diags)}_small{to_add}')
+            plt.savefig(wp.remove_special_caraters(path) + f".{fig_format}",
+                        bbox_inches='tight', format=fig_format)
         plt.show()
     return lambdas
 
@@ -1067,7 +1166,7 @@ def plot_my_surface(x, y, z, ticks=None, ticks_labels=None, label=None,
 
 def compute_n_plot_heatmap_veff_wrt_kappa_constant(
         kappa_coefficients, traits, beta_constant, palette="inferno",
-        is_mass=False, fig_dir=None):
+        is_mass=False, fig_dir=None, fig_format="pdf"):
 
     coef_count = len(kappa_coefficients)
     heatmap = {'lambda': np.zeros((coef_count, coef_count)),
@@ -1101,8 +1200,10 @@ def compute_n_plot_heatmap_veff_wrt_kappa_constant(
 
     if not isinstance(fig_dir, type(None)):
         path = write_fig_path(
-            fig_dir, f'heatmap_lambda_v{wp.list_to_string(traits)}.pdf')
-        plt.savefig(wp.remove_special_caraters(path), bbox_inches='tight')
+            fig_dir, f'heatmap_lambda_v{wp.list_to_string(traits)}')
+        plt.savefig(wp.remove_special_caraters(path) + f".{fig_format}",
+                    bbox_inches='tight',
+                    format=fig_format)
     plt.show()
 
     if is_mass:
@@ -1121,8 +1222,9 @@ def compute_n_plot_heatmap_veff_wrt_kappa_constant(
         s.set(xlabel=r"$k_1$", ylabel=r"$k_2$")
         if not isinstance(fig_dir, type(None)):
             path = write_fig_path(
-                fig_dir, f'heatmap_mass_v{wp.list_to_string(traits)}.pdf')
-            plt.savefig(wp.remove_special_caraters(path), bbox_inches='tight')
+                fig_dir, f'heatmap_mass_v{wp.list_to_string(traits)}')
+            plt.savefig(wp.remove_special_caraters(path) + f".{fig_format}",
+                        bbox_inches='tight', format=fig_format)
         plt.show()
     return heatmap
 
@@ -1177,7 +1279,7 @@ def compute_n_plot_distribution_bimodal_wrt_kappa(
         is_conservative, traits, par_beta, kappa_varying_coefs,
         kappa_fixed_coef=None, par_ninit=PAR_N_INIT_LONGTIME,
         par_grids=PAR_GRIDS_CONSTANT_LONGTIME, fig_dir=None,
-        is_no_heredity=False, xmax=None):
+        is_no_heredity=False, xmax=None, fig_format="pdf"):
     """ Plot (N_1, N_2) (bimodal case) with respect to kappa.
 
     Parameters
@@ -1263,8 +1365,9 @@ def compute_n_plot_distribution_bimodal_wrt_kappa(
     plt.legend()
     if not isinstance(fig_dir, type(None)):
         path = write_fig_path(
-            fig_dir, f'N_v{wp.list_to_string(traits)}_wrt_{name_end}.pdf')
-        plt.savefig(wp.remove_special_caraters(path), bbox_inches='tight')
+            fig_dir, f'N_v{wp.list_to_string(traits)}_wrt_{name_end}')
+        plt.savefig(wp.remove_special_caraters(path) + f".{fig_format}",
+                    bbox_inches='tight', format=fig_format)
     plt.show()
 
     # plot_my_surface(out['sizes'], coef, np.concatenate(z), ticks=None,
@@ -1320,7 +1423,7 @@ def approx_lambda_linear(
 #     # Save.
 #     if not isinstance(fig_directory, type(None)):
 #         path = f'{fig_directory}/v_and_means_M{trait_count}_wrt_std_n_' + \
-#                 f'correlations{diags[0]}-{diags[-1]}-{len(diags)}.pdf'
+#                 f'correlations{diags[0]}-{diags[-1]}-{len(diags)}'
 #         print("Saved at: ", path)
 #         plt.savefig(wp.remove_special_caraters(path), bbox_inches='tight')
 #     plt.show()
