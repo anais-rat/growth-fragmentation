@@ -20,9 +20,10 @@ import src.write_path as wp
 # Auxiliary
 # ---------
 
+
 def normalize_wrt_0_axis(array, weights=None):
-    """ Normalize a nD array along its rows (say of length `r`) using provided
-    weights if some, or weights `np.ones(r)` otherwize (s.t. the sum along rows
+    """Normalize a nD array along its rows (say of length `r`) using provided
+    weights if some, or weights `np.ones(r)` otherwise (s.t. the sum along rows
     is one).
 
     """
@@ -34,7 +35,7 @@ def normalize_wrt_0_axis(array, weights=None):
 
 
 def find_nearest(array, value):
-    """ Find the index and value of the element in the given array `array` that
+    """Find the index and value of the element in the given array `array` that
     is closest to the specified value `value`.
 
     """
@@ -46,17 +47,20 @@ def find_nearest(array, value):
 def test_kappa_conform(kappa, v_count):
     """Raises an error if arguments are not conform."""
     if len(kappa) != v_count:
-        raise ValueError("The dimensions of the set of features and the "
-                         "variability kernel do not match.")
+        raise ValueError(
+            "The dimensions of the set of features and the "
+            "variability kernel do not match."
+        )
 
 
 def test_sizes_conform(sizes, x_test):
     """Raises an error if arguments are not conform."""
     if sizes[-1] < x_test:
-        print('sizes[-1]: ', sizes[-1])
-        print('x_test: ', x_test)
-        raise ValueError("The size `x_test` at which saved `n_evo` is outside"
-                         "the x-grid.")
+        print("sizes[-1]: ", sizes[-1])
+        print("x_test: ", x_test)
+        raise ValueError(
+            "The size `x_test` at which saved `n_evo` is outside" "the x-grid."
+        )
 
 
 # -----------------
@@ -66,10 +70,20 @@ def test_sizes_conform(sizes, x_test):
 #  Linear growth rates.
 # ---------------------
 
-def compute_evo_approximation(is_conservative, features, par_beta, par_kappa,
-                              par_ninit, par_grids, x_test, is_saved=False,
-                              normalization_wtr_feature=False, tmax=None):
-    """ Computes an approximation of the solution to the growth-fragmentation
+
+def compute_evo_approximation(
+    is_conservative,
+    features,
+    par_beta,
+    par_kappa,
+    par_ninit,
+    par_grids,
+    x_test,
+    is_saved=False,
+    normalization_wtr_feature=False,
+    tmax=None,
+):
+    """Computes an approximation of the solution to the growth-fragmentation
     equation, in its conservative or non-conservative form, in the case of
     equal mitosis and variability in (linear) growth rate, with coefficients
     'tau(v,x) = vx' and 'gamma(v,x) = beta(x) tau(v,x)'.
@@ -93,7 +107,7 @@ def compute_evo_approximation(is_conservative, features, par_beta, par_kappa,
         List made of:
         kappa : ndarray
             2D array (v_count, v_count) variability kernel (stochastic matrix
-            st. `kappa[i, j]` is the propba for a cell of feature `features[i]`
+            st. `kappa[i, j]` is the proba for a cell of feature `features[i]`
             to give birth to a cell of feature `features[j]`).
         kappa_name : string or None
             If not None and simulation is saved, saving path uses the short
@@ -108,7 +122,7 @@ def compute_evo_approximation(is_conservative, features, par_beta, par_kappa,
         x_count : int
             Odd integer, the number of points of the x-grid.
         period_count : int
-            Number of periods ln(2) before endding computations.
+            Number of periods ln(2) before ending computations.
         tsaved_per_period_count : int
             Number of time steps per period ln(2) at which data is stored.
     x_test : int
@@ -165,10 +179,17 @@ def compute_evo_approximation(is_conservative, features, par_beta, par_kappa,
     kappa = par_kappa[0]
     beta = init.generate_beta(*par_beta)
     path = wp.write_output_path(
-        is_conservative, features, par_beta, par_kappa, par_ninit, par_grids,
-        normalization_wtr_feature=normalization_wtr_feature, tmax=tmax)
+        is_conservative,
+        features,
+        par_beta,
+        par_kappa,
+        par_ninit,
+        par_grids,
+        normalization_wtr_feature=normalization_wtr_feature,
+        tmax=tmax,
+    )
     if os.path.exists(path):  # If the path exists we load it directly.
-        print("Simulation loaded from: ", path, '\n')
+        print("Simulation loaded from: ", path, "\n")
         output = np.load(path, allow_pickle=True).item()
         return output  # list(output.values())
 
@@ -194,8 +215,9 @@ def compute_evo_approximation(is_conservative, features, par_beta, par_kappa,
     gamma = np.zeros((v_count, x_count + k))
     gamma[:, :-k] = np.dot(features_col, [sizes * beta(sizes)])
     # > Initial condition (normalized).
-    n_init = init.generate_initial_condition(
-        *par_ninit, dxs_to_normalize=dxs)(sizes, features)
+    n_init = init.generate_initial_condition(*par_ninit, dxs_to_normalize=dxs)(
+        sizes, features
+    )
 
     # Initialization.
     times = np.array([0])
@@ -224,15 +246,19 @@ def compute_evo_approximation(is_conservative, features, par_beta, par_kappa,
     time_count = 0
     while times[-1] <= t_max and n_tdiff >= 1e-5:
         # 1st step of the splitting: transport and loss of dividing mothers.
-        n_1 = ((1-v_ratios) * n_temp[:, 1:] + v_ratios*n_temp[:, :-1] /
-               (delta_x+1)) / (1 + dt*gamma)  # Shape (v_count, x_count + k).
+        n_1 = (
+            (1 - v_ratios) * n_temp[:, 1:] + v_ratios * n_temp[:, :-1] / (delta_x + 1)
+        ) / (
+            1 + dt * gamma
+        )  # Shape (v_count, x_count + k).
         # 2nd step of the splitting: new born daughters (v_count, x_count).
-        n_2 = n_1[:, :-k] + 2*i*dt*np.dot(np.transpose(kappa),
-                                          gamma[:, k:] * n_1[:, k:])
+        n_2 = n_1[:, :-k] + 2 * i * dt * np.dot(
+            np.transpose(kappa), gamma[:, k:] * n_1[:, k:]
+        )
         # Udpdates and savings.
         n_sum_temp = np.sum(n_2 * dxs)
         n_sum_evo = np.append(n_sum_evo, n_sum_temp)
-        n_tdiff = np.sum(abs(n_2/n_sum_temp-n_temp[:, 1:-k]/n_sum_evo[-2])/dt)
+        n_tdiff = np.sum(abs(n_2 / n_sum_temp - n_temp[:, 1:-k] / n_sum_evo[-2]) / dt)
         n_tdiff_evo = np.append(n_tdiff_evo, n_tdiff)
         n_temp[:, 1:-k] = np.copy(n_2)  # Next computation will use the current
         #  distrib `n_temp` NOT normalized & that remains 0 outside of `sizes`.
@@ -242,36 +268,50 @@ def compute_evo_approximation(is_conservative, features, par_beta, par_kappa,
         times = np.append(times, times[-1] + dt)
         if (time_count % t_test_idx_step) == 0:  # Multiple of t_test_idx_step.
             if isinstance(tmax, type(None)):
-                print('Time progression: ',
-                      times[-1], time_count//t_test_idx_step /
-                      tsaved_per_period_count, '/', period_count)
+                print(
+                    "Time progression: ",
+                    times[-1],
+                    time_count // t_test_idx_step / tsaved_per_period_count,
+                    "/",
+                    period_count,
+                )
             else:
-                print('Time progression: ', times[-1], '/', tmax)
-            print('n_diff: ', n_tdiff, '\n')
+                print("Time progression: ", times[-1], "/", tmax)
+            print("n_diff: ", n_tdiff, "\n")
             t_test = np.append(t_test, times[-1])
             n_evo = np.append(n_evo, [n_2], axis=0)
-            n_evo_normalized = np.append(n_evo_normalized, [n_temp[:, 1:-k]],
-                                         axis=0)  # Normalization done later.
+            n_evo_normalized = np.append(
+                n_evo_normalized, [n_temp[:, 1:-k]], axis=0
+            )  # Normalization done later.
             if normalization_wtr_feature:
                 n_evo_norm_wrt_v = np.append(
                     n_evo_norm_wrt_v,
-                    [normalize_wrt_0_axis(n_temp[:, 1:-k], dxs)], axis=0)
+                    [normalize_wrt_0_axis(n_temp[:, 1:-k], dxs)],
+                    axis=0,
+                )
 
         # Estimates of lambda (starting from time '2dt').
         if time_count > 1:
             time_count_half = int(time_count / 2)
-            lambda_n = np.append(lambda_n, np.polyfit(times[time_count_half:],
-                                 np.log(n_sum_evo)[time_count_half:], 1)[0])
+            lambda_n = np.append(
+                lambda_n,
+                np.polyfit(
+                    times[time_count_half:], np.log(n_sum_evo)[time_count_half:], 1
+                )[0],
+            )
             if is_conservative:
-                diff_growth_frag = np.dot(features_col, [sizes])-gamma[:, :-k]
+                diff_growth_frag = np.dot(features_col, [sizes]) - gamma[:, :-k]
                 lambda_error = np.append(
-                    lambda_error, np.sum(diff_growth_frag * n_2 * dxs))
+                    lambda_error, np.sum(diff_growth_frag * n_2 * dxs)
+                )
             else:
                 lambda_gamma = np.append(
-                    lambda_gamma, np.sum(gamma[:, :x_count] * n_2 * dxs))
+                    lambda_gamma, np.sum(gamma[:, :x_count] * n_2 * dxs)
+                )
                 xn_int = np.dot(sizes * n_2, dxs)
                 lambda_tau = np.append(
-                    lambda_tau, np.sum(features * xn_int) / np.sum(xn_int))
+                    lambda_tau, np.sum(features * xn_int) / np.sum(xn_int)
+                )
 
     # All estimates of lambda are gathered in 'lambda_estimates'.
     if is_conservative:
@@ -279,25 +319,39 @@ def compute_evo_approximation(is_conservative, features, par_beta, par_kappa,
     else:
         lambda_estimates = [lambda_n, lambda_gamma, lambda_tau]
 
-    n_evo_normalized = n_evo_normalized * \
-        np.reshape(np.exp(-t_test * lambda_n[-1]), (len(t_test), 1, 1))
+    n_evo_normalized = n_evo_normalized * np.reshape(
+        np.exp(-t_test * lambda_n[-1]), (len(t_test), 1, 1)
+    )
 
-    output = {'times': times, 't_test': t_test, 'sizes': sizes,
-              'n_test': n_test, 'n_evo': n_evo,
-              'n_evo_normalized': n_evo_normalized,
-              'n_sum_evo': n_sum_evo, 'n_tdiff_evo': n_tdiff_evo,
-              'lambda_estimates': lambda_estimates,
-              'n_evo_norm_wrt_v': n_evo_norm_wrt_v}
+    output = {
+        "times": times,
+        "t_test": t_test,
+        "sizes": sizes,
+        "n_test": n_test,
+        "n_evo": n_evo,
+        "n_evo_normalized": n_evo_normalized,
+        "n_sum_evo": n_sum_evo,
+        "n_tdiff_evo": n_tdiff_evo,
+        "lambda_estimates": lambda_estimates,
+        "n_evo_norm_wrt_v": n_evo_norm_wrt_v,
+    }
     if is_saved:
-        print("Simulation saved at: ", path, '\n')
+        print("Simulation saved at: ", path, "\n")
         np.save(path, output)
     return output
 
 
-def compute_longtime_approximation(is_conservative, features, par_beta,
-                                   par_kappa, par_ninit, par_grids,
-                                   is_saved=False, is_printed=True):
-    """ Computes an approximation of the solution to the direct eigenproblem
+def compute_longtime_approximation(
+    is_conservative,
+    features,
+    par_beta,
+    par_kappa,
+    par_ninit,
+    par_grids,
+    is_saved=False,
+    is_printed=True,
+):
+    """Computes an approximation of the solution to the direct eigenproblem
     associated to the growth-fragmentation equation, in its conservative or
     non-conservative form, in the case of equal mitosis and variability in
     (linear) growth rate, with coefficients 'tau(v,x) = vx' and
@@ -322,11 +376,17 @@ def compute_longtime_approximation(is_conservative, features, par_beta,
     kappa = par_kappa[0]
     beta = init.generate_beta(*par_beta)
     path = wp.write_output_path(
-        is_conservative, features, par_beta, par_kappa, par_ninit, par_grids,
-        is_longtime=True)
+        is_conservative,
+        features,
+        par_beta,
+        par_kappa,
+        par_ninit,
+        par_grids,
+        is_longtime=True,
+    )
     if os.path.exists(path):  # If the path exists we load it directly.
         if is_printed:
-            print('loaded: ', path)
+            print("loaded: ", path)
         output = np.load(path, allow_pickle=True).item()
         return output
     i = 2 - is_conservative
@@ -346,8 +406,9 @@ def compute_longtime_approximation(is_conservative, features, par_beta,
     gamma = np.zeros((v_count, x_count + k))
     gamma[:, :-k] = np.dot(features_col, [sizes * beta(sizes)])
     # Initial condition.
-    n_init = init.generate_initial_condition(
-        *par_ninit, dxs_to_normalize=dxs)(sizes, features)
+    n_init = init.generate_initial_condition(*par_ninit, dxs_to_normalize=dxs)(
+        sizes, features
+    )
     # .........................................................................
 
     # Initialization.
@@ -369,16 +430,19 @@ def compute_longtime_approximation(is_conservative, features, par_beta,
     time_count = 0
     while times[-1] <= t_max and n_tdiff >= 1e-5:
         # 1st step of the splitting: transport and loss of dividing mothers.
-        n_1 = ((1-v_ratios) * n_temp[:, 1:] + v_ratios * n_temp[:, :-1] /
-               (delta_x+1)) / (1 + dt*gamma)  # Shape (v_count, x_count + k).
+        n_1 = (
+            (1 - v_ratios) * n_temp[:, 1:] + v_ratios * n_temp[:, :-1] / (delta_x + 1)
+        ) / (
+            1 + dt * gamma
+        )  # Shape (v_count, x_count + k).
         # 2nd step of the splitting: new born daughters (v_count, x_count).
         n_2 = n_1[:, :-k] + 2 * i * dt * np.dot(
-            np.transpose(kappa), gamma[:, k:] * n_1[:, k:])
+            np.transpose(kappa), gamma[:, k:] * n_1[:, k:]
+        )
         # Udpdates and savings.
         n_sum_temp = np.sum(n_2 * dxs)
         n_sum_evo = np.append(n_sum_evo, n_sum_temp)
-        n_tdiff = np.sum(abs(n_2 / n_sum_temp
-                             - n_temp[:, 1:-k] / n_sum_evo[-2]) / dt)
+        n_tdiff = np.sum(abs(n_2 / n_sum_temp - n_temp[:, 1:-k] / n_sum_evo[-2]) / dt)
         n_temp[:, 1:-k] = np.copy(n_2)  # REmains zero outside of `sizes`.
         n_2 = n_2 / n_sum_temp
         time_count += 1
@@ -386,18 +450,25 @@ def compute_longtime_approximation(is_conservative, features, par_beta,
         # Estimates of lambda (starting from time '2dt').
         if time_count > t_max / 2:
             time_count_half = int(time_count / 2)
-            lambda_n = np.append(lambda_n, np.polyfit(times[time_count_half:],
-                                 np.log(n_sum_evo)[time_count_half:], 1)[0])
+            lambda_n = np.append(
+                lambda_n,
+                np.polyfit(
+                    times[time_count_half:], np.log(n_sum_evo)[time_count_half:], 1
+                )[0],
+            )
             if is_conservative:
-                diff_growth_frag = np.dot(features_col, [sizes])-gamma[:, :-k]
+                diff_growth_frag = np.dot(features_col, [sizes]) - gamma[:, :-k]
                 lambda_error = np.append(
-                    lambda_error, np.sum(diff_growth_frag * n_2 * dxs))
+                    lambda_error, np.sum(diff_growth_frag * n_2 * dxs)
+                )
             else:
-                lambda_gamma = np.append(lambda_gamma,
-                                         np.sum(gamma[:, :x_count]*n_2*dxs))
+                lambda_gamma = np.append(
+                    lambda_gamma, np.sum(gamma[:, :x_count] * n_2 * dxs)
+                )
                 xn_int = np.dot(sizes * n_2, dxs)
                 lambda_tau = np.append(
-                    lambda_tau, np.sum(features * xn_int) / np.sum(xn_int))
+                    lambda_tau, np.sum(features * xn_int) / np.sum(xn_int)
+                )
 
     # All estimates of lambda are gathered in 'lambda_estimates'.
     if is_conservative:
@@ -405,9 +476,14 @@ def compute_longtime_approximation(is_conservative, features, par_beta,
     else:
         lambda_estimates = [lambda_n, lambda_gamma, lambda_tau]
 
-    output = {'times': times, 'sizes': sizes, 'n_last': n_temp[:, 1:x_count],
-              'n_sum_evo': n_sum_evo, 'lambda_estimates': lambda_estimates}
-    if path != '':
+    output = {
+        "times": times,
+        "sizes": sizes,
+        "n_last": n_temp[:, 1:x_count],
+        "n_sum_evo": n_sum_evo,
+        "lambda_estimates": lambda_estimates,
+    }
+    if path != "":
         np.save(path, output)
     return output
 
@@ -415,15 +491,23 @@ def compute_longtime_approximation(is_conservative, features, par_beta,
 #  Constant growth rates.
 # -----------------------
 
-def compute_evo_approximation_constant(is_conservative, features, par_beta,
-                                       par_kappa, par_ninit, par_grids,
-                                       x_test, is_saved=False):
-    """ Computes an approximation of the solution to the growth-fragmentation
+
+def compute_evo_approximation_constant(
+    is_conservative,
+    features,
+    par_beta,
+    par_kappa,
+    par_ninit,
+    par_grids,
+    x_test,
+    is_saved=False,
+):
+    """Computes an approximation of the solution to the growth-fragmentation
     equation, in its conservative or non-conservative form, in the case of
     equal mitosis and variability in (constant) growth rate, with coefficients
     'tau(v,x) = v' and 'gamma(v,x) = beta(x) tau(v,x)'.
 
-    See `compute_evo_approximation_constant` doctstring except for:
+    See `compute_evo_approximation_constant` docstring except for:
 
     Parameters
     ----------
@@ -433,7 +517,7 @@ def compute_evo_approximation_constant(is_conservative, features, par_beta,
         x_count : int
             Number of points of the x-grid.
         period_count : int
-            Number of periods ln(2) before endding computations.
+            Number of periods ln(2) before ending computations.
         tsaved_per_period_count : int
             Number of time steps per period ln(2) at which data is stored.
     x_test : int
@@ -444,8 +528,15 @@ def compute_evo_approximation_constant(is_conservative, features, par_beta,
     dx, x_count, period_count, tsaved_per_period_count = par_grids
     kappa = par_kappa[0]
     beta = init.generate_beta(*par_beta)
-    path = wp.write_output_path(is_conservative, features, par_beta, par_kappa,
-                                par_ninit, par_grids, is_tau_constant=True)
+    path = wp.write_output_path(
+        is_conservative,
+        features,
+        par_beta,
+        par_kappa,
+        par_ninit,
+        par_grids,
+        is_tau_constant=True,
+    )
     if os.path.exists(path):  # If the path exists we load it directly.
         output = np.load(path, allow_pickle=True).item()
         return output
@@ -472,8 +563,9 @@ def compute_evo_approximation_constant(is_conservative, features, par_beta,
     gamma = np.zeros((v_count, 2 * x_count - 1))
     gamma[:, :x_count] = np.dot(features_col, [beta(sizes)])
     # > Initial condition (normalized).
-    n_init = init.generate_initial_condition(
-        *par_ninit, dxs_to_normalize=dxs)(sizes, features)
+    n_init = init.generate_initial_condition(*par_ninit, dxs_to_normalize=dxs)(
+        sizes, features
+    )
 
     # Initialization.
     times = np.array([0])
@@ -496,20 +588,24 @@ def compute_evo_approximation_constant(is_conservative, features, par_beta,
     time_count = 0
     while times[-1] <= t_max:
         # 1st step of the splitting: transport and loss of dividing mothers.
-        n_1 = ((1 - v_ratios)*n_temp[:, 1:] + v_ratios*n_temp[:, :-1]) \
-            / (1 + dt*gamma[:, 1:])  # Shape (v_count, 2 * x_count - 2).
+        n_1 = ((1 - v_ratios) * n_temp[:, 1:] + v_ratios * n_temp[:, :-1]) / (
+            1 + dt * gamma[:, 1:]
+        )  # Shape (v_count, 2 * x_count - 2).
         # 2nd step of the splitting: new born daughters (v_count, x_count - 1).
         mother_idxs = 2 * np.arange(1, x_count - 1)
-        n_2 = n_1[:, :x_count-1] + 2 * i * dt * np.dot(
-            np.transpose(kappa), gamma[:, mother_idxs] * n_1[:, mother_idxs-1])
+        n_2 = n_1[:, : x_count - 1] + 2 * i * dt * np.dot(
+            np.transpose(kappa), gamma[:, mother_idxs] * n_1[:, mother_idxs - 1]
+        )
         # Null boundary condition (v_count, x_count).
         n_2 = np.concatenate((np.zeros((v_count, 1)), n_2), axis=1)
 
         # Udpdates and savings.
         n_sum_temp = np.sum(n_2 * dxs)
         n_sum_evo = np.append(n_sum_evo, n_sum_temp)
-        n_tdiff_evo = np.append(n_tdiff_evo, np.sum(
-            abs(n_2/n_sum_temp - n_temp[:, :x_count]/n_sum_evo[-2]) / dt))
+        n_tdiff_evo = np.append(
+            n_tdiff_evo,
+            np.sum(abs(n_2 / n_sum_temp - n_temp[:, :x_count] / n_sum_evo[-2]) / dt),
+        )
         n_temp[:, :x_count] = np.copy(n_2)  # Next computation will use the
         # current distribution 'n_temp' NOT renormalized.
         # But we save the renormalized distribution.
@@ -518,29 +614,40 @@ def compute_evo_approximation_constant(is_conservative, features, par_beta,
         time_count += 1
         times = np.append(times, times[-1] + dt)
         if (time_count % t_test_idx_step) == 0:  # Multiple of t_test_idx_step.
-            print(times[-1], time_count//t_test_idx_step /
-                  tsaved_per_period_count, '/', period_count)
+            print(
+                times[-1],
+                time_count // t_test_idx_step / tsaved_per_period_count,
+                "/",
+                period_count,
+            )
             t_test = np.append(t_test, times[-1])
             n_evo = np.append(n_evo, [n_2], axis=0)
             n_evo_normalized = np.append(
-                n_evo_normalized, [n_temp[:, :x_count]], axis=0)
+                n_evo_normalized, [n_temp[:, :x_count]], axis=0
+            )
 
         # Estimates of lambda (starting from time '2dt').
         if time_count > 1:
             time_count_half = int(time_count / 2)
-            lambda_n = np.append(lambda_n, np.polyfit(times[time_count_half:],
-                                 np.log(n_sum_evo)[time_count_half:], 1)[0])
+            lambda_n = np.append(
+                lambda_n,
+                np.polyfit(
+                    times[time_count_half:], np.log(n_sum_evo)[time_count_half:], 1
+                )[0],
+            )
             if is_conservative:
-                diff_growth_frag = np.dot(features_col, [sizes]) - \
-                    gamma[:, :x_count]
+                diff_growth_frag = np.dot(features_col, [sizes]) - gamma[:, :x_count]
                 lambda_error = np.append(
-                    lambda_error, np.sum(diff_growth_frag * n_2 * dxs))
+                    lambda_error, np.sum(diff_growth_frag * n_2 * dxs)
+                )
             else:
                 lambda_gamma = np.append(
-                    lambda_gamma, np.sum(gamma[:, :x_count] * n_2 * dxs))
+                    lambda_gamma, np.sum(gamma[:, :x_count] * n_2 * dxs)
+                )
                 xn_int = np.dot(sizes * n_2, dxs)
                 lambda_tau = np.append(
-                    lambda_tau, np.sum(features * xn_int) / np.sum(xn_int))
+                    lambda_tau, np.sum(features * xn_int) / np.sum(xn_int)
+                )
 
     # All estimates of lambda are gathered in 'lambda_estimates'.
     if is_conservative:
@@ -548,23 +655,37 @@ def compute_evo_approximation_constant(is_conservative, features, par_beta,
     else:
         lambda_estimates = [lambda_n, lambda_gamma, lambda_tau]
 
-    n_evo_normalized = n_evo_normalized * \
-        np.reshape(np.exp(-t_test * lambda_n[-1]), (len(t_test), 1, 1))
+    n_evo_normalized = n_evo_normalized * np.reshape(
+        np.exp(-t_test * lambda_n[-1]), (len(t_test), 1, 1)
+    )
 
-    output = {'times': times, 't_test': t_test, 'sizes': sizes,
-              'n_test': n_test, 'n_evo': n_evo,
-              'n_evo_normalized': n_evo_normalized,
-              'n_sum_evo': n_sum_evo, 'n_tdiff_evo': n_tdiff_evo,
-              'lambda_estimates': lambda_estimates}
+    output = {
+        "times": times,
+        "t_test": t_test,
+        "sizes": sizes,
+        "n_test": n_test,
+        "n_evo": n_evo,
+        "n_evo_normalized": n_evo_normalized,
+        "n_sum_evo": n_sum_evo,
+        "n_tdiff_evo": n_tdiff_evo,
+        "lambda_estimates": lambda_estimates,
+    }
     if is_saved:
         np.save(path, output)
     return output
 
 
 def compute_longtime_approximation_constant(
-        is_conservative, features, par_beta, par_kappa, par_ninit, par_grids,
-        is_saved=False, is_printed=True):
-    """ Computes an approximation of the solution to the direct eigenproblem
+    is_conservative,
+    features,
+    par_beta,
+    par_kappa,
+    par_ninit,
+    par_grids,
+    is_saved=False,
+    is_printed=True,
+):
+    """Computes an approximation of the solution to the direct eigenproblem
     associated to the growth-fragmentation equation, in its conservative or
     non-conservative form, in the case of equal mitosis and variability in
     (constant) growth rate, with coefficients'tau(v,x) = v' and
@@ -589,11 +710,18 @@ def compute_longtime_approximation_constant(
     kappa = par_kappa[0]
     beta = init.generate_beta(*par_beta)
     path = wp.write_output_path(
-        is_conservative, features, par_beta, par_kappa, par_ninit, par_grids,
-        is_tau_constant=True, is_longtime=True)
+        is_conservative,
+        features,
+        par_beta,
+        par_kappa,
+        par_ninit,
+        par_grids,
+        is_tau_constant=True,
+        is_longtime=True,
+    )
     if os.path.exists(path):  # If the path exists we load it directly.
         if is_printed:
-            print('loaded: ', path)
+            print("loaded: ", path)
         output = np.load(path, allow_pickle=True).item()
         return output
     # Definition of parameters and variables.
@@ -608,8 +736,9 @@ def compute_longtime_approximation_constant(
     t_max = np.log(2) * period_count  # Maximum time of the computation.
     gamma = np.zeros((v_count, 2 * x_count - 1))
     gamma[:, :x_count] = np.dot(features_col, [beta(sizes)])
-    n_init = init.generate_initial_condition(
-        *par_ninit, dxs_to_normalize=dxs)(sizes, features)
+    n_init = init.generate_initial_condition(*par_ninit, dxs_to_normalize=dxs)(
+        sizes, features
+    )
     # .........................................................................
 
     # Initialization.
@@ -627,11 +756,13 @@ def compute_longtime_approximation_constant(
     time_count = 0
     while times[-1] <= t_max:
         # .....................................................................
-        n_1 = ((1 - v_ratios)*n_temp[:, 1:] + v_ratios*n_temp[:, :-1]) \
-            / (1 + dt*gamma[:, 1:])
+        n_1 = ((1 - v_ratios) * n_temp[:, 1:] + v_ratios * n_temp[:, :-1]) / (
+            1 + dt * gamma[:, 1:]
+        )
         mother_idxs = 2 * np.arange(1, x_count)  # !!!! - 1)
-        n_2 = n_1[:, :x_count-1] + 2 * i * dt * np.dot(
-            np.transpose(kappa), gamma[:, mother_idxs] * n_1[:, mother_idxs-1])
+        n_2 = n_1[:, : x_count - 1] + 2 * i * dt * np.dot(
+            np.transpose(kappa), gamma[:, mother_idxs] * n_1[:, mother_idxs - 1]
+        )
         n_2 = np.concatenate((np.zeros((v_count, 1)), n_2), axis=1)
         # .....................................................................
         # Udpdates and savings.
@@ -644,19 +775,25 @@ def compute_longtime_approximation_constant(
         n_2 = n_2[:, :x_count] / n_sum_temp
         if time_count > 1:
             time_count_half = int(time_count / 2)
-            lambda_n = np.append(lambda_n, np.polyfit(times[time_count_half:],
-                                 np.log(n_sum_evo)[time_count_half:], 1)[0])
+            lambda_n = np.append(
+                lambda_n,
+                np.polyfit(
+                    times[time_count_half:], np.log(n_sum_evo)[time_count_half:], 1
+                )[0],
+            )
             if is_conservative:
-                diff_growth_frag = np.dot(features_col, [sizes]) - \
-                    gamma[:, :x_count]
+                diff_growth_frag = np.dot(features_col, [sizes]) - gamma[:, :x_count]
                 lambda_error = np.append(
-                    lambda_error, np.sum(diff_growth_frag * n_2 * dxs))
+                    lambda_error, np.sum(diff_growth_frag * n_2 * dxs)
+                )
             else:
-                lambda_gamma = np.append(lambda_gamma,
-                                         np.sum(gamma[:, :x_count]*n_2*dxs))
+                lambda_gamma = np.append(
+                    lambda_gamma, np.sum(gamma[:, :x_count] * n_2 * dxs)
+                )
                 xn_int = np.dot(sizes * n_2, dxs)
                 lambda_tau = np.append(
-                    lambda_tau, np.sum(features * xn_int) / np.sum(xn_int))
+                    lambda_tau, np.sum(features * xn_int) / np.sum(xn_int)
+                )
 
     # All estimates of lambda are gathered in 'lambda_estimates'.
     if is_conservative:
@@ -664,9 +801,14 @@ def compute_longtime_approximation_constant(
     else:
         lambda_estimates = [lambda_n, lambda_gamma, lambda_tau]
 
-    output = {'times': times, 'sizes': sizes, 'n_last': n_temp[:, :x_count],
-              'n_sum_evo': n_sum_evo, 'lambda_estimates': lambda_estimates}
-    if path != '':
+    output = {
+        "times": times,
+        "sizes": sizes,
+        "n_last": n_temp[:, :x_count],
+        "n_sum_evo": n_sum_evo,
+        "lambda_estimates": lambda_estimates,
+    }
+    if path != "":
         np.save(path, output)
     return output
 
@@ -674,12 +816,12 @@ def compute_longtime_approximation_constant(
 # def compute_longtime_approximation_constant_2D_mix_vs_irr(
 #         is_conservative, features, par_beta, kappa_irr, par_ninit, par_grids,
 #         is_normalized_by_v=False):
-#     """Computes the direct eigenvector associated to the growth-fragementation
-#     equation, in its conservative or non-conserva. form, in the case of zqual
+#     """Computes the direct eigenvector associated to the growth-fragmentation
+#     equation, in its conservative or non-conserva. form, in the case of equal
 #     mitosis and 2 distinct growth rates, with coefficients ` tau(v,x) = v`
 #     and `gamma(v,x) = beta(x) tau(v,x)`.
 
-#     Return also 
+#     Return also
 #     Parameters
 #     ----------
 #     is_conservative : bool
@@ -700,7 +842,7 @@ def compute_longtime_approximation_constant(
 #         x_count : int
 #             Number of points of the x-grid.
 #         period_count : int
-#             Number of periods ln(2) before endding computations.
+#             Number of periods ln(2) before ending computations.
 #         tsaved_per_period_count : int
 #             Number of time steps per period ln(2) at which data is stored.
 #     is_normalized_by_v : bool, optional
@@ -727,8 +869,8 @@ def compute_longtime_approximation_constant(
 #     # Full mixing.
 #     par_kappa = {'irr': [kappa_irr, None]}
 
-#     # No mixing computed as a "sytem" with kappa=Id (no couling), rescaling
-#     # each trait, rather than as 2 equations of homogenehous population.
+#     # No mixing computed as a "system" with kappa=Id (no coupling), rescaling
+#     # each trait, rather than as 2 equations of homogeneous population.
 #     par_kappa['red'] = ker.kappa_identity(2)
 
 #     out = {}
@@ -744,7 +886,7 @@ def compute_longtime_approximation_constant(
 #         out['irr'] = plot.normalize_by_v(out['irr'])
 
 #     # Used to check that after rescaling, the 2 component of 'red' are the
-#     # distributions obtained with 2 independent aproximations.
+#     # distributions obtained with 2 independent approximations.
 #     out['i1'] = scheme.compute_longtime_approximation_constant(
 #             is_conservative, [features[0]], par_beta, ker.kappa_identity(1),
 #             par_ninit, par_grids, is_printed=False)['n_last']

@@ -130,7 +130,7 @@ KAPPAS = [  # > 0. Uniform kernel (geometric mean).
 #         palette='inferno', fig_format=FIG_FORMAT)
 
 # Several per graph.
-# > FIGURE 1 (effective fitness coincides with clasical means).
+# > FIGURE 1 (effective fitness coincides with classical means).
 LABELS = [
     rf"$(k_{{1}}, k_{{2}}) = ({kappa[0, 1]}, {kappa[1, 0]})$" for kappa in KAPPAS[:2]
 ]
@@ -147,7 +147,7 @@ fv.plot_2D_v_eff_and_mean_wrt_traits_constant(
 )
 
 
-# > FIGURE 5 (effective fitness not "controled" by a clasical mean).
+# > FIGURE 5 (effective fitness not "controlled" by a classical mean).
 LABELS = [
     rf"$(k_{{1}}, k_{{2}}) = ({kappa[0, 1]}, {kappa[1, 0]})$" for kappa in KAPPAS[2:]
 ]
@@ -241,8 +241,11 @@ KAPPA_COEFS = np.linspace(0, 1, 101)
 
 for traits in TRAITS_S:
     fv.compute_n_plot_heatmap_veff_wrt_kappa_constant(
-        KAPPA_COEFS, traits, PAR_BETA_CONSTANT[1], fig_dir=FIG_DIR,
-        fig_format=FIG_FORMAT
+        KAPPA_COEFS,
+        traits,
+        PAR_BETA_CONSTANT[1],
+        fig_dir=FIG_DIR,
+        fig_format=FIG_FORMAT,
     )
 
 # Alternative visualization.
@@ -279,7 +282,7 @@ TRAITS = np.array([0.5, 2.5])  # np.array([1.4, 1.6])
 COEFFICIENTS = np.linspace(0, 1, 21)  # (see below).
 
 # Plot
-# Both row vaying.
+# Both row varying.
 # > kappa = [[1 - coef, coef], [coef, 1 - coef]], with varying coef.
 fv.compute_n_plot_distribution_bimodal_wrt_kappa(
     IS_CONSERVATIVE,
