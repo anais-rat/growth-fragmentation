@@ -95,7 +95,7 @@ def normalize_by_v(distribution):
     return distribution / np.transpose([np.sum(distribution, axis=1)])
 
 
-def write_feature_lengend(feature, index=""):
+def write_feature_legend(feature, index=""):
     return rf"$v_{{ {index} }} = {feature}$"
 
 
@@ -313,7 +313,7 @@ def plot_distribution_old(
             sizes,
             dist[feature_idx],
             LINESTYLES[feature_idx],
-            label=write_feature_lengend(features[feature_idx]),
+            label=write_feature_legend(features[feature_idx]),
             color=COLORS[feature_idx],
         )
     if not isinstance(kappa, type(None)):
@@ -368,8 +368,7 @@ def plot_distribution(
 
     if labels is None:
         labels = [
-            write_feature_lengend(features[i], index=i + 1)
-            for i in range(feature_count)
+            write_feature_legend(features[i], index=i + 1) for i in range(feature_count)
         ]
         if feature_count != plot_count:
             raise Exception("Define labels")
@@ -472,7 +471,7 @@ def plot_evo_distribution_continuous(
                     sizes[:xmax_idx],
                     n_evo[time_idx, feature_idx, :xmax_idx],
                     color=colors[feature_idx],
-                    label=write_feature_lengend(features[feature_idx]),
+                    label=write_feature_legend(features[feature_idx]),
                 )
             plt.ylabel(LABELS["y_density"], labelpad=8)
             plt.xlabel(LABELS["x_size"], labelpad=6)
@@ -521,7 +520,7 @@ def plot_evo_distribution_continuous(
                         n_evo[time_idx, feature_idx, :xmax_idx],
                         color=colors[feature_idx],
                         linewidth=2,
-                        label=write_feature_lengend(features[feature_idx]),
+                        label=write_feature_legend(features[feature_idx]),
                     )
                     axes[1].plot(
                         times_to_plot,
@@ -599,7 +598,7 @@ def plot_evo_distribution_discrete(
                 sizes[:xmax_idx],
                 n_evo[time_idxs[i], feature_idx, :xmax_idx],
                 LINESTYLES[feature_idx],
-                label=write_feature_lengend(features[feature_idx]),
+                label=write_feature_legend(features[feature_idx]),
                 color=COLORS[feature_idx],
             )
         if is_legend and i == 0:
@@ -667,7 +666,7 @@ def plot_evo_distribution_discrete_CFL1(
                 n_evo[time_idxs[i], feature_idx, :xmax_idx],
                 LINESTYLES[feature_idx],
                 color=COLORS[feature_idx],
-                label=write_feature_lengend(features[feature_idx]),
+                label=write_feature_legend(features[feature_idx]),
             )
         axes[i].text(
             0.96, 0.94, LEGENDS[i], transform=axes[i].transAxes, va="top", ha="right"
@@ -718,7 +717,7 @@ def plot_evo_distribution_at_fixed_size(
             times[:tmax_idx],
             n_along_fixed_x[:tmax_idx, feature_idx],
             color=COLORS[feature_idx],
-            label=write_feature_lengend(features[feature_idx]),
+            label=write_feature_legend(features[feature_idx]),
         )
     plt.ylabel(LABELS["y_density"] + rf" at $x={fixed_size:.2f}$", labelpad=25)
     plt.xlabel(LABELS["x_time"], labelpad=9)
@@ -742,7 +741,7 @@ def plot_evo_distribution_at_fixed_size(
                 times[:tmax_idx],
                 n_along_fixed_x[:tmax_idx, feature_idx],
                 color=COLORS[feature_idx],
-                label=write_feature_lengend(features[feature_idx]),
+                label=write_feature_legend(features[feature_idx]),
             )
         plt.ylabel("Rescaled density\n" + rf"at $x={fixed_size:.2f}$", labelpad=25)
         plt.xlabel(LABELS["x_time"], labelpad=9)

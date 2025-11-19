@@ -419,7 +419,7 @@ def compute_evo_approximation(
         # p_boundary = p_temp[:, -1] # np.dot(dxs[1:k+1], np.dot(gamma[1:k+1]*p_2[:k], kappa))
         # p_2 = np.concatenate((p_2, p_boundary), axis=1)
 
-        # Udpdates and savings.
+        # Updates and savings.
         p_sum_temp = np.sum(p_2[:, k:] * dxs)
         p_sum_evo = np.append(p_sum_evo, p_sum_temp)
         p_tdiff_evo = np.append(
@@ -472,8 +472,8 @@ def compute_evo_approximation(
 def compute_approximation_from_dirac(
     is_conservative,
     features,
-    alpha,
-    kappa,
+    par_beta,
+    par_kappa,
     sizes_phi,
     k,
     x_count,
@@ -483,7 +483,7 @@ def compute_approximation_from_dirac(
 ):
     # Verification of arguments format and definition of useful variables.
     v_count = len(features)
-    if len(kappa) != v_count:
+    if len(par_kappa[0]) != v_count:
         raise ValueError(
             "The dimensions of the set of features and the "
             "variability kernel do not match."
@@ -499,13 +499,13 @@ def compute_approximation_from_dirac(
     exp_factor = np.array([])
     for v_idx in range(v_count):
         for x_idx in range(x_phi_count):
-            init_par = [v_idx, np.where(sizes == sizes_phi[x_idx])[0][0]]
+            par_init = [v_idx, np.where(sizes == sizes_phi[x_idx])[0][0]]
 
             def n_init(sizes_, features_, dxs_to_normalize=None):
                 return scheme.initial_condition(
                     sizes_,
                     features_,
-                    c_init_par=init_par,
+                    c_init_par=par_init,
                     c_init_choice="dirac",
                     dxs_to_normalize=dxs,
                 )
@@ -513,9 +513,9 @@ def compute_approximation_from_dirac(
             p = wp.write_output_path(
                 is_conservative,
                 features,
-                alpha,
-                kappa,
-                [*init_par, "dirac"],
+                par_beta,
+                par_kappa,
+                [*par_init, "dirac"],
                 k,
                 x_count,
                 period_count,
@@ -525,8 +525,8 @@ def compute_approximation_from_dirac(
             out = scheme.compute_longtime_approximation(
                 is_conservative,
                 features,
-                beta,
-                kappa,
+                par_beta,
+                par_kappa,
                 n_init,
                 k,
                 x_count,
@@ -540,7 +540,7 @@ def compute_approximation_from_dirac(
                 np.sum(out["n_last"] * dxs) * exp_tmp
             )
             if is_printed:
-                print("(v_idx, x_idx) =", init_par)
+                print("(v_idx, x_idx) =", par_init)
                 print("n_phi[v_idx, x_idx]: ", n_phi[v_idx, x_idx])
             exp_factor = np.append(exp_factor, exp_tmp)
             # lambdas = np.append(lambdas, out['lambda_estimates'][0][-1])
@@ -570,7 +570,7 @@ def compute_longtime_approximation_from_dirac_constant(
         List made of:
         kappa : ndarray
             2D array (v_count, v_count) variability kernel (stochastic matrix
-            st. `kappa[i, j]` is the propba for a cell of feature `features[i]`
+            st. `kappa[i, j]` is the proba for a cell of feature `features[i]`
             to give birth to a cell of feature `features[j]`).
         kappa_name : string or None
             If not None and simulation is saved, saving path uses the short

@@ -475,8 +475,8 @@ def kappa_limit(traits, idx_mother, sigma):
     vmin, vmax = min(traits), max(traits)
     v_mother = traits[idx_mother]
     row = np.array([])
-    for v_daugther in traits:
-        if abs(v_mother - v_daugther) <= sigma:
+    for v_daughter in traits:
+        if abs(v_mother - v_daughter) <= sigma:
             if v_mother < vmin + sigma:
                 coef = sigma + v_mother - vmin
             elif v_mother > vmax - sigma:
@@ -651,7 +651,7 @@ def write_kappa_choice(kappa_choice, diag=None, is_shorten=False):
 # ------------------
 
 
-def rearange_2D_kappa(kappa):
+def rearrange_2D_kappa(kappa):
     return np.array([[kappa[1, 1], kappa[1, 0]], [kappa[0, 1], kappa[0, 0]]])
 
 
@@ -711,7 +711,7 @@ def plot_2D_v_eff_and_mean_wrt_traits_constant(
     if is_mirror:
         traits_l = traits[traits <= fixed_trait]
         traits_r = traits[traits > fixed_trait]
-        kappa_1to2_s = [rearange_2D_kappa(kappa) for kappa in kappa_s]
+        kappa_1to2_s = [rearrange_2D_kappa(kappa) for kappa in kappa_s]
         lambdas_l_s = [
             compute_lambdas_2D_wrt_traits(kappa, fixed_trait, traits_l, beta)
             for kappa in kappa_1to2_s
@@ -1249,7 +1249,11 @@ def plot_v_eff_and_means_w_varying_std_n_correlation(
                 )
                 path = wp.remove_special_characters(path) + f".{fig_format}"
                 print("\n Saved at: ", path)
-                plt.savefig(path, bbox_inches="tight", format=fig_format,)
+                plt.savefig(
+                    path,
+                    bbox_inches="tight",
+                    format=fig_format,
+                )
         plt.show()
 
     # Plot.
@@ -1692,7 +1696,14 @@ def approx_lambda_linear(
         Orderred individual traits (v_i = traits[i], with tau_i(x) = v_i x).
     """
     d = scheme.compute_longtime_approximation(
-        False, traits, par_beta, par_kappa, par_ninit, par_grids, is_saved=IS_DATA_SAVED, is_printed=False
+        False,
+        traits,
+        par_beta,
+        par_kappa,
+        par_ninit,
+        par_grids,
+        is_saved=IS_DATA_SAVED,
+        is_printed=False,
     )
     print("lambda_estimates: ", [lbds[-1] for lbds in d["lambda_estimates"]])
     return d["lambda_estimates"][-1][-1]
@@ -1703,7 +1714,7 @@ def approx_lambda_constant_via_scheme(
     par_beta,
     par_kappa,
     par_ninit=PAR_N_INIT_LONGTIME,
-    par_grids=PAR_GRIDS_CONSTANT_LONGTIME
+    par_grids=PAR_GRIDS_CONSTANT_LONGTIME,
 ):
     """Approximation of the Malthus parameter for mitosis constant growth rates.
 
@@ -1716,6 +1727,13 @@ def approx_lambda_constant_via_scheme(
         Orderred individual traits (v_i = traits[i], with tau_i(x) = v_i x).
     """
     d = scheme.compute_longtime_approximation_constant(
-        False, traits, par_beta, par_kappa, par_ninit, par_grids, is_saved=IS_DATA_SAVED, is_printed=False
+        False,
+        traits,
+        par_beta,
+        par_kappa,
+        par_ninit,
+        par_grids,
+        is_saved=IS_DATA_SAVED,
+        is_printed=False,
     )
     return d["lambda_estimates"][-1][-1]

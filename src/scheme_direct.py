@@ -88,7 +88,7 @@ def compute_evo_approximation(
     equal mitosis and variability in (linear) growth rate, with coefficients
     'tau(v,x) = vx' and 'gamma(v,x) = beta(x) tau(v,x)'.
 
-    Uses a scheme chosen to reduce as much as possible disipativity to capture
+    Uses a scheme chosen to reduce as much as possible dissipativity to capture
     the oscillations in the case mitose and tau linear:
         - geometrical grid in the x variable (size),
         - splitting in two steps handling growth through an upwind scheme with
