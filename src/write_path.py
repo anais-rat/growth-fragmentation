@@ -27,11 +27,9 @@ IS_ARXIV_FRIENDLY_FIG_NAMES = True
 
 def separate_directory_from_file(file_path):
     """Return the file name and its directory path from the file path."""
-    print(file_path)
     idx = len(file_path) - 1 - file_path[::-1].find(os.path.sep)
     file_dir = file_path[:idx]
     file_name = file_path[idx + 1 :]
-    print(file_dir, file_name)
     return file_dir, file_name
 
 

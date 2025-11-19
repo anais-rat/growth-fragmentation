@@ -101,72 +101,7 @@ X_MAX = 5
 
 
 # %%
-# FIGURES 2, 5 (case  A/B, M = 2)
-# -------------------------------
-
-# Features: one fixed (`FIXED_TRAIT`) and one running through `TRAITS`.
-FIXED_TRAIT = 4
-TRAITS = np.linspace(1, 8, 200)
-
-# Various transition matrices.
-KAPPAS = [  # > 0. Uniform kernel (geometric mean).
-    np.array([[0.5, 0.5], [0.5, 0.5]]),
-    # > 1. "Diagonal and uniform" (arithmetic mean).
-    np.array([[0.75, 0.25], [0.25, 0.75]]),
-    # > 2. Mixing beneficial to v_2.
-    np.array([[0.2, 0.8], [0.2, 0.8]]),
-    # > 3. Low mixing kernel.
-    np.array([[0.8, 0.2], [0.2, 0.8]]),
-    # > 4. High mixing kernel.
-    np.array([[0.2, 0.8], [0.8, 0.2]]),
-    # > 5. Mixing beneficial to v_1.
-    np.array([[0.8, 0.2], [0.8, 0.2]]),
-]
-
-# # One per graphe.
-# for kappa in KAPPAS:
-#     fv.plot_2D_v_eff_and_mean_wrt_traits_constant(
-#         kappa, FIXED_TRAIT, TRAITS, PAR_BETA_CONSTANT, FIG_DIR,
-#         palette='inferno', fig_format=FIG_FORMAT)
-
-# Several per graph.
-# > FIGURE 1 (effective fitness coincides with classical means).
-LABELS = [
-    rf"$(k_{{1}}, k_{{2}}) = ({kappa[0, 1]}, {kappa[1, 0]})$" for kappa in KAPPAS[:2]
-]
-# BOX_TO_ANCHOR = (1.2, 0)
-fv.plot_2D_v_eff_and_mean_wrt_traits_constant(
-    KAPPAS[:2],
-    FIXED_TRAIT,
-    TRAITS,
-    PAR_BETA_CONSTANT[1],
-    FIG_DIR,
-    labels=LABELS,
-    palette="inferno",
-    fig_format=FIG_FORMAT,
-)
-
-
-# > FIGURE 5 (effective fitness not "controlled" by a classical mean).
-LABELS = [
-    rf"$(k_{{1}}, k_{{2}}) = ({kappa[0, 1]}, {kappa[1, 0]})$" for kappa in KAPPAS[2:]
-]
-
-fv.plot_2D_v_eff_and_mean_wrt_traits_constant(
-    KAPPAS[2:],
-    FIXED_TRAIT,
-    TRAITS,
-    PAR_BETA_CONSTANT[1],
-    FIG_DIR,
-    labels=LABELS,
-    palette="inferno",
-    bbox_to_anchor=(0, 1.08),
-    fig_format=FIG_FORMAT,
-)
-
-
-# %%
-# FIGURE 3  (case  A/B, M = 2)
+# FIGURE 2  (case  A/B, M = 2)
 # ----------------------------
 
 # Growth rate and traits: tau(i, x) = TRAITS[i].
@@ -231,7 +166,71 @@ plot.plot_distribution(
 
 
 # %%
-# FIGURE 4 (case  A/B, M = 2)
+# FIGURES 3, 4 (case  A/B, M = 2)
+# -------------------------------
+
+# Features: one fixed (`FIXED_TRAIT`) and one running through `TRAITS`.
+FIXED_TRAIT = 4
+TRAITS = np.linspace(1, 8, 200)
+
+# Various transition matrices.
+KAPPAS = [  # > 0. Uniform kernel (geometric mean).
+    np.array([[0.5, 0.5], [0.5, 0.5]]),
+    # > 1. "Diagonal and uniform" (arithmetic mean).
+    np.array([[0.75, 0.25], [0.25, 0.75]]),
+    # > 2. Mixing beneficial to v_2.
+    np.array([[0.2, 0.8], [0.2, 0.8]]),
+    # > 3. Low mixing kernel.
+    np.array([[0.8, 0.2], [0.2, 0.8]]),
+    # > 4. High mixing kernel.
+    np.array([[0.2, 0.8], [0.8, 0.2]]),
+    # > 5. Mixing beneficial to v_1.
+    np.array([[0.8, 0.2], [0.8, 0.2]]),
+]
+
+# # One per graphe.
+# for kappa in KAPPAS:
+#     fv.plot_2D_v_eff_and_mean_wrt_traits_constant(
+#         kappa, FIXED_TRAIT, TRAITS, PAR_BETA_CONSTANT, FIG_DIR,
+#         palette='inferno', fig_format=FIG_FORMAT)
+
+# Several per graph.
+# > FIGURE 3 (effective fitness coincides with classical means).
+LABELS = [
+    rf"$(k_{{1}}, k_{{2}}) = ({kappa[0, 1]}, {kappa[1, 0]})$" for kappa in KAPPAS[:2]
+]
+fv.plot_2D_v_eff_and_mean_wrt_traits_constant(
+    KAPPAS[:2],
+    FIXED_TRAIT,
+    TRAITS,
+    PAR_BETA_CONSTANT[1],
+    FIG_DIR,
+    labels=LABELS,
+    palette="inferno",
+    fig_format=FIG_FORMAT,
+)
+
+
+# > FIGURE 4 (effective fitness not "controlled" by a classical mean).
+LABELS = [
+    rf"$(k_{{1}}, k_{{2}}) = ({kappa[0, 1]}, {kappa[1, 0]})$" for kappa in KAPPAS[2:]
+]
+
+fv.plot_2D_v_eff_and_mean_wrt_traits_constant(
+    KAPPAS[2:],
+    FIXED_TRAIT,
+    TRAITS,
+    PAR_BETA_CONSTANT[1],
+    FIG_DIR,
+    labels=LABELS,
+    palette="inferno",
+    bbox_to_anchor=(0, 1.08),
+    fig_format=FIG_FORMAT,
+)
+
+
+# %%
+# FIGURE 5 (case  A/B, M = 2)
 # ---------------------------
 
 # Growth rate and traits: tau(i, x)= TRAITS[i].
@@ -248,7 +247,7 @@ for traits in TRAITS_S:
         fig_format=FIG_FORMAT,
     )
 
-# Alternative visualization.
+# Alternative visualization (not saved).
 TRAITS_S = [np.array([0.5, 2.5]), np.array([2.5, 0.5]), np.array([1, 1.5])]
 
 for traits in TRAITS_S:
@@ -271,7 +270,7 @@ for traits in TRAITS_S:
 
 
 # %%
-# FIGURE 6, 10 (case  A/B, M = 2)
+# FIGURE 6, S1 (case  A/B, M = 2)
 # -------------------------------
 
 # Growth rate and traits: tau(i, x) = TRAITS[i].
@@ -394,19 +393,19 @@ fv.plot_v_eff_and_means_w_varying_count_constant(
 
 
 # %%
-# FIGURE 8 (case  A/B, M > 2)
-# ---------------------------
+# FIGURE 8 (case  A/B, M = 10)
+# ----------------------------
 
 V_MID = 4
-INTERVAL_LENGTHS = np.linspace(0.01, 3, 21)  # np.linspace(0.01, 3)
+INTERVAL_LENGTHS_STD_COR = np.linspace(0.01, 3, 21)  # np.linspace(0.01, 3)
 
 TRAIT_COUNT = 10
-DIAGS = [0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+DIAGS_STD_COR = [0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
 
 fv.plot_v_eff_and_means_w_varying_std_n_correlation(
-    DIAGS,
+    DIAGS_STD_COR,
     V_MID,
-    INTERVAL_LENGTHS,
+    INTERVAL_LENGTHS_STD_COR,
     TRAIT_COUNT,
     PAR_BETA_CONSTANT[1],
     FIG_DIR,
@@ -417,9 +416,9 @@ fv.plot_v_eff_and_means_w_varying_std_n_correlation(
 )
 
 fv.plot_v_eff_and_means_w_varying_std_n_correlation(
-    DIAGS,
+    DIAGS_STD_COR,
     V_MID,
-    INTERVAL_LENGTHS,
+    INTERVAL_LENGTHS_STD_COR,
     TRAIT_COUNT,
     PAR_BETA_CONSTANT[1],
     FIG_DIR,
@@ -431,9 +430,9 @@ fv.plot_v_eff_and_means_w_varying_std_n_correlation(
 )
 
 fv.plot_v_eff_and_means_w_varying_std_n_correlation(
-    DIAGS,
+    DIAGS_STD_COR,
     V_MID,
-    INTERVAL_LENGTHS,
+    INTERVAL_LENGTHS_STD_COR,
     TRAIT_COUNT,
     PAR_BETA_CONSTANT[1],
     FIG_DIR,
@@ -517,20 +516,19 @@ fv.plot_v_eff_and_means_w_varying_std_constant(
 
 
 # %%
-# FIGURES 10 /S2 (M > 2)
-# ------------------
+# FIGURES S2 (M = 10)
+# -------------------
+
+V_MID = 4
+TRAIT_COUNT = 10
+
 
 # Equal mitosis, linear tau, constant beta.
 
-V_MID = 4
-INTERVAL_LENGTHS = np.linspace(0.01, 3, 21)
-TRAIT_COUNT = 10
-DIAGS = [0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
-
 fv.plot_v_eff_and_means_w_varying_std_n_correlation(
-    DIAGS,
+    DIAGS_STD_COR,
     V_MID,
-    INTERVAL_LENGTHS,
+    INTERVAL_LENGTHS_STD_COR,
     TRAIT_COUNT,
     PAR_BETA_CONSTANT,
     FIG_DIR,
@@ -543,9 +541,9 @@ fv.plot_v_eff_and_means_w_varying_std_n_correlation(
 
 
 fv.plot_v_eff_and_means_w_varying_std_n_correlation(
-    DIAGS,
+    DIAGS_STD_COR,
     V_MID,
-    INTERVAL_LENGTHS,
+    INTERVAL_LENGTHS_STD_COR,
     TRAIT_COUNT,
     PAR_BETA_CONSTANT,
     FIG_DIR,
@@ -558,9 +556,9 @@ fv.plot_v_eff_and_means_w_varying_std_n_correlation(
 )
 
 fv.plot_v_eff_and_means_w_varying_std_n_correlation(
-    DIAGS,
+    DIAGS_STD_COR,
     V_MID,
-    INTERVAL_LENGTHS,
+    INTERVAL_LENGTHS_STD_COR,
     TRAIT_COUNT,
     PAR_BETA_CONSTANT,
     FIG_DIR,
@@ -571,14 +569,15 @@ fv.plot_v_eff_and_means_w_varying_std_n_correlation(
     case_coef="linear",
     fig_format=FIG_FORMAT,
 )
+# %%
 
 
 # Equal mitosis, linear tau, linear beta.
 
 fv.plot_v_eff_and_means_w_varying_std_n_correlation(
-    DIAGS,
+    DIAGS_STD_COR,
     V_MID,
-    INTERVAL_LENGTHS,
+    INTERVAL_LENGTHS_STD_COR,
     TRAIT_COUNT,
     PAR_BETA_LINEAR,
     FIG_DIR,
@@ -589,11 +588,10 @@ fv.plot_v_eff_and_means_w_varying_std_n_correlation(
     fig_format=FIG_FORMAT,
 )
 
-# %%
 fv.plot_v_eff_and_means_w_varying_std_n_correlation(
-    DIAGS,
+    DIAGS_STD_COR,
     V_MID,
-    INTERVAL_LENGTHS,
+    INTERVAL_LENGTHS_STD_COR,
     TRAIT_COUNT,
     PAR_BETA_LINEAR,
     FIG_DIR,
@@ -604,11 +602,11 @@ fv.plot_v_eff_and_means_w_varying_std_n_correlation(
     case_coef="linear",
     fig_format=FIG_FORMAT,
 )
-# %%
+
 fv.plot_v_eff_and_means_w_varying_std_n_correlation(
-    DIAGS,
+    DIAGS_STD_COR,
     V_MID,
-    INTERVAL_LENGTHS,
+    INTERVAL_LENGTHS_STD_COR,
     TRAIT_COUNT,
     PAR_BETA_LINEAR,
     FIG_DIR,
@@ -619,3 +617,23 @@ fv.plot_v_eff_and_means_w_varying_std_n_correlation(
     case_coef="linear",
     fig_format=FIG_FORMAT,
 )
+# %%
+
+
+# Equal mitosis, constant tau, constant beta.
+# Note. Test if resolution via the scheme for tau constant lead similar results
+#       than via resolution of the explicit linear system in Case A + equal mitosis.
+
+# fv.plot_v_eff_and_means_w_varying_std_n_correlation(
+#     DIAGS_STD_COR,
+#     V_MID,
+#     INTERVAL_LENGTHS_STD_COR,
+#     TRAIT_COUNT,
+#     PAR_BETA_CONSTANT,
+#     FIG_DIR,
+#     is_classic_mean=True,
+#     is_title=False,
+#     is_small_only=True,
+#     case_coef="constant-via-scheme",
+#     fig_format=FIG_FORMAT,
+# )

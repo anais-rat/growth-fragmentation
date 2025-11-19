@@ -80,6 +80,9 @@ X_COUNT = 2001
 PERIOD_COUNT = 10
 PAR_GRIDS_CONSTANT_LONGTIME = [DX, X_COUNT, PERIOD_COUNT]
 
+# True to save outputs of longtime (heavy) computations.
+IS_DATA_SAVED = True
+
 
 # Plot
 # ----
@@ -111,7 +114,7 @@ def write_fig_folder(subfolder):
 
 def write_fig_path(subfolder, name):
     path = os.path.join(write_fig_folder(subfolder), name)
-    print("Saved at: ", path, "\n")
+    # print("Saved at: ", path, "\n")
     return path
 
 
@@ -251,7 +254,6 @@ def approx_adjoint_constant(kappa, traits, beta=1):
         2 * beta * matrix * np.transpose([traits])
     )
     imax = np.argmax(eigenvalues)
-    print(eigenvalues, eigenvectors, imax)
     lambda_, phi = eigenvalues[imax], eigenvectors[:, imax]
     eigenvalues = np.sort(eigenvalues)
     gap = eigenvalues[-1] - eigenvalues[-2]
@@ -820,11 +822,9 @@ def plot_2D_v_eff_and_mean_wrt_traits_constant(
             fig_directory, "v_and_means_M2_wrt_1v_" + f"kappa{write_matrix(kappa_s)}"
         )
         # feature replaced by v in the figure name !!!!!!
-        plt.savefig(
-            wp.remove_special_characters(path) + f".{fig_format}",
-            bbox_inches="tight",
-            format=fig_format,
-        )
+        path = wp.remove_special_characters(path) + f".{fig_format}"
+        print("\n Saved at: ", path)
+        plt.savefig(path, bbox_inches="tight", format=fig_format)
     plt.show()
     return lambdas_s
 
@@ -939,11 +939,9 @@ def plot_v_eff_and_means_w_varying_count_constant(
         path = write_fig_path(
             fig_directory, "v_and_means_wrt_M_kappa-" + f"{name_kappa}_V-{trait_choice}"
         )
-        plt.savefig(
-            wp.remove_special_characters(path) + f".{fig_format}",
-            bbox_inches="tight",
-            format=fig_format,
-        )
+        path = wp.remove_special_characters(path) + f".{fig_format}"
+        print("\n Saved at: ", path)
+        plt.savefig(path, bbox_inches="tight", format=fig_format)
     plt.show()
     return lambdas_s
 
@@ -1080,11 +1078,9 @@ def plot_v_eff_and_means_w_varying_std_constant(
             f"v_and_means_M{trait_count}"
             + f"_wrt_std_kappa-{name_kappa}_V-{trait_choice}",
         )
-        plt.savefig(
-            wp.remove_special_characters(path) + f".{fig_format}",
-            bbox_inches="tight",
-            format=fig_format,
-        )
+        path = wp.remove_special_characters(path) + f".{fig_format}"
+        print("\n Saved at: ", path)
+        plt.savefig(path, bbox_inches="tight", format=fig_format)
     plt.show()
     plt.clf()
 
@@ -1095,7 +1091,7 @@ def plot_v_eff_and_means_w_varying_std_constant(
     #     else:
     #         plt.plot(interval_lengths, means[key])
     # plt.plot(interval_lengths, lambdas / beta, label=LABELS['v_eff'],
-    #          linestyle='--')
+    #           linestyle='--')
     # plt.title(write_kappa_choice(kappa_choice, diag), pad=8, loc='right')
     # plt.legend(fontsize="small")
     # plt.xlabel(r"Length of the interval of traits", labelpad=6)
@@ -1103,8 +1099,9 @@ def plot_v_eff_and_means_w_varying_std_constant(
     #     path = write_fig_path(
     #         fig_directory, f'v_and_means_M{trait_count}_wrt_std_kappa-' +
     #         f'{kappa_choice1}_V-{trait_choice}_small')
-    #     plt.savefig(wp.remove_special_characters(path) + f".{fig_format}", bbox_inches='tight',
-    #                    format=fig_format)
+    #     path = wp.remove_special_characters(path) + f".{fig_format}"
+    #     print("\n Saved at: ", path)
+    #     plt.savefig(path, bbox_inches="tight", format=fig_format)
     # plt.show()
     return lambdas_s
 
@@ -1129,6 +1126,9 @@ def plot_v_eff_and_means_w_varying_std_n_correlation(
         beta_constant = par_beta
         to_add = to_add + f"_{case_coef}-{par_beta}"
     elif case_coef == "linear":
+        beta_constant = par_beta[1]
+        to_add = to_add + f"_{case_coef}-{par_beta[0]}-{par_beta[1]}"
+    elif case_coef == "constant-via-scheme":
         beta_constant = par_beta[1]
         to_add = to_add + f"_{case_coef}-{par_beta[0]}-{par_beta[1]}"
     else:
@@ -1185,14 +1185,24 @@ def plot_v_eff_and_means_w_varying_std_n_correlation(
                         for i in range(len(traits_s))
                     ]
                 )
-            else:
+            elif case_coef == "linear":
                 lambdas = np.array(
                     [
                         approx_lambda_linear(
                             traits_s[i],
                             par_beta,
                             [kappas[i], f"diag{diag}"],
-                            is_traits_regular=True,
+                        )
+                        for i in range(len(traits_s))
+                    ]
+                )
+            else:
+                lambdas = np.array(
+                    [
+                        approx_lambda_constant_via_scheme(
+                            traits_s[i],
+                            par_beta,
+                            [kappas[i], f"diag{diag}"],
                         )
                         for i in range(len(traits_s))
                     ]
@@ -1237,11 +1247,9 @@ def plot_v_eff_and_means_w_varying_std_n_correlation(
                     f"v_and_means_M{trait_count}_wrt_std_n_correlations"
                     + f"{diags[0]}-{diags[-1]}-{len(diags)}{to_add}",
                 )
-                plt.savefig(
-                    wp.remove_special_characters(path) + f".{fig_format}",
-                    bbox_inches="tight",
-                    format=fig_format,
-                )
+                path = wp.remove_special_characters(path) + f".{fig_format}"
+                print("\n Saved at: ", path)
+                plt.savefig(path, bbox_inches="tight", format=fig_format,)
         plt.show()
 
     # Plot.
@@ -1261,14 +1269,24 @@ def plot_v_eff_and_means_w_varying_std_n_correlation(
                         for i in range(len(traits_s))
                     ]
                 )
-            else:
+            elif case_coef == "linear":
                 lambdas = np.array(
                     [
                         approx_lambda_linear(
                             traits_s[i],
                             par_beta,
                             [kappas[i], f"diag{diag}"],
-                            is_traits_regular=True,
+                        )
+                        for i in range(len(traits_s))
+                    ]
+                )
+            else:
+                lambdas = np.array(
+                    [
+                        approx_lambda_constant_via_scheme(
+                            traits_s[i],
+                            par_beta,
+                            [kappas[i], f"diag{diag}"],
                         )
                         for i in range(len(traits_s))
                     ]
@@ -1286,12 +1304,6 @@ def plot_v_eff_and_means_w_varying_std_n_correlation(
         if is_classic_mean:
             to_add = to_add + "_w-means"
             for key, means in means_s.items():
-                # if key == 'arithmetic':
-                #     plt.plot(interval_lengths, means, color='red',
-                #              label=LABELS_MEANS, linestyle='--')
-                # else:
-                #     plt.plot(interval_lengths, means, color='red',
-                #              linestyle='--')
                 plt.plot(
                     interval_lengths,
                     means,
@@ -1316,7 +1328,7 @@ def plot_v_eff_and_means_w_varying_std_n_correlation(
         )
         plt.xlabel(r"Length $\sigma$ of the interval of traits", labelpad=6)
         plt.ylabel(r"Effective trait", labelpad=8)
-        format_ticks_2D(format_x="%.0f", format_y="%.1f")
+        format_ticks_2D(format_x="%.0f", format_y="%.2f")
         sns.despine()
         # Save.
         if not isinstance(fig_directory, type(None)):
@@ -1325,13 +1337,12 @@ def plot_v_eff_and_means_w_varying_std_n_correlation(
                 f"v_and_means_M{trait_count}_wrt_std_n_correlations"
                 + f"{diags[0]}-{diags[-1]}-{len(diags)}_small{to_add}",
             )
-            plt.savefig(
-                wp.remove_special_characters(path) + f".{fig_format}",
-                bbox_inches="tight",
-                format=fig_format,
-            )
+            path = wp.remove_special_characters(path) + f".{fig_format}"
+            if len(formats) == 1:
+                print("\n Saved at: ", path)
+            plt.savefig(path, bbox_inches="tight", format=fig_format)
         plt.show()
-    return lambdas
+    return
 
 
 def plot_my_surface(
@@ -1434,11 +1445,9 @@ def compute_n_plot_heatmap_veff_wrt_kappa_constant(
 
     if not isinstance(fig_dir, type(None)):
         path = write_fig_path(fig_dir, f"heatmap_lambda_v{wp.list_to_string(traits)}")
-        plt.savefig(
-            wp.remove_special_characters(path) + f".{fig_format}",
-            bbox_inches="tight",
-            format=fig_format,
-        )
+        path = wp.remove_special_characters(path) + f".{fig_format}"
+        print("\n Saved at: ", path)
+        plt.savefig(path, bbox_inches="tight", format=fig_format)
     plt.show()
 
     if is_mass:
@@ -1466,11 +1475,9 @@ def compute_n_plot_heatmap_veff_wrt_kappa_constant(
         s.set(xlabel=r"$k_1$", ylabel=r"$k_2$")
         if not isinstance(fig_dir, type(None)):
             path = write_fig_path(fig_dir, f"heatmap_mass_v{wp.list_to_string(traits)}")
-            plt.savefig(
-                wp.remove_special_characters(path) + f".{fig_format}",
-                bbox_inches="tight",
-                format=fig_format,
-            )
+            path = wp.remove_special_characters(path) + f".{fig_format}"
+            print("\n Saved at: ", path)
+            plt.savefig(path, bbox_inches="tight", format=fig_format)
         plt.show()
     return heatmap
 
@@ -1659,13 +1666,10 @@ def compute_n_plot_distribution_bimodal_wrt_kappa(
     plt.legend()
     if not isinstance(fig_dir, type(None)):
         path = write_fig_path(fig_dir, f"N_v{wp.list_to_string(traits)}_wrt_{name_end}")
-        plt.savefig(
-            wp.remove_special_characters(path) + f".{fig_format}",
-            bbox_inches="tight",
-            format=fig_format,
-        )
+        path = wp.remove_special_characters(path) + f".{fig_format}"
+        print("\n Saved at: ", path)
+        plt.savefig(path, bbox_inches="tight", format=fig_format)
     plt.show()
-
     # plot_my_surface(out['sizes'], coef, np.concatenate(z), ticks=None,
     #                    ticks_labels=None, label=None, angle_rotation=0)
 
@@ -1676,7 +1680,6 @@ def approx_lambda_linear(
     par_kappa,
     par_ninit=PAR_N_INIT_LONGTIME,
     par_grids=PAR_GRIDS_LINEAR_LONGTIME,
-    is_traits_regular=False,
 ):
     """Approximation of the Malthus parameter for mitosis, linear growth rates.
 
@@ -1689,44 +1692,30 @@ def approx_lambda_linear(
         Orderred individual traits (v_i = traits[i], with tau_i(x) = v_i x).
     """
     d = scheme.compute_longtime_approximation(
-        False, traits, par_beta, par_kappa, par_ninit, par_grids
+        False, traits, par_beta, par_kappa, par_ninit, par_grids, is_saved=IS_DATA_SAVED, is_printed=False
     )
-    print("\n", [lambda_[-1] for lambda_ in d["lambda_estimates"]])
-    return d["lambda_estimates"][0][-1]
+    print("lambda_estimates: ", [lbds[-1] for lbds in d["lambda_estimates"]])
+    return d["lambda_estimates"][-1][-1]
 
 
-# def plot_v_eff_and_means_w_varying_std_n_correlation_linear(
-#         diags, fixed_trait, interval_lengths, trait_count, par_beta,
-#         par_ninit, par_grids, fig_directory, linestyles):
-#     curve_count = len(diags)
-#     colors = sns.color_palette('viridis', curve_count)
-#     # Compute.
-#     traits_s = generate_numbers_w_varying_std(
-#         fixed_trait, interval_lengths, trait_count, 'uniform')
-#     # Plot.
-#     plt.figure(figsize=(5.4, 3.6))  # Default (6.4, 4.8) # !!!
-#     for i in range(curve_count):
-#         diag = diags[i]
-#         kappas = [generate_kappa(traits, 'diag_n_uniform', diag=diag) for
-#                   traits in traits_s]
-#         lambdas = np.array([approx_lambda_linear(
-#             traits_s[i], par_beta, [kappas[i], f'diag{diag}'], par_ninit,
-#             par_grids, is_traits_regular=True) for i in
-#             range(len(traits_s))])
+def approx_lambda_constant_via_scheme(
+    traits,
+    par_beta,
+    par_kappa,
+    par_ninit=PAR_N_INIT_LONGTIME,
+    par_grids=PAR_GRIDS_CONSTANT_LONGTIME
+):
+    """Approximation of the Malthus parameter for mitosis constant growth rates.
 
-#         plt.plot(interval_lengths, lambdas / par_beta[1], linestyles[i],
-#                  label=rf'${diag}$', color=colors[i])
-#         plt.title(write_kappa_choice('diag_n_uniform'), pad=8,
-#                   loc='right')
-#     plt.legend(title=r"$\alpha$", bbox_to_anchor=(1, 1.1),
-#                 loc='upper left', edgecolor='#F0F0F0')
-#     plt.xlabel(r"Length of the interval of traits", labelpad=6)
-#     plt.ylabel(r"Effective fitness", labelpad=8)
-#     # Save.
-#     if not isinstance(fig_directory, type(None)):
-#         path = f'{fig_directory}/v_and_means_M{trait_count}_wrt_std_n_' + \
-#                 f'correlations{diags[0]}-{diags[-1]}-{len(diags)}'
-#         print("Saved at: ", path)
-#         plt.savefig(wp.remove_special_characters(path), bbox_inches='tight')
-#     plt.show()
-#     return lambdas
+    Case of equal mitosis with coefficients:
+        tau(v,x) = v and gamma(v,x) = v beta(x).
+
+    Parameters
+    ----------
+    traits : ndarray
+        Orderred individual traits (v_i = traits[i], with tau_i(x) = v_i x).
+    """
+    d = scheme.compute_longtime_approximation_constant(
+        False, traits, par_beta, par_kappa, par_ninit, par_grids, is_saved=IS_DATA_SAVED, is_printed=False
+    )
+    return d["lambda_estimates"][-1][-1]
