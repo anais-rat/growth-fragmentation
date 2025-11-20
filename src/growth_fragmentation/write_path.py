@@ -30,7 +30,10 @@ import os
 from os.path import join
 
 absolute_path = os.path.abspath(__file__)
-current_dir = os.path.dirname(absolute_path)  # Path to `src` directory.
+current_dir = os.path.dirname(
+    absolute_path
+)  # Path to `growth_fragmentation` directory.
+current_dir = os.path.dirname(current_dir)  # Path to `src` directory.
 projet_dir = os.path.dirname(current_dir)
 
 FOLDER_DAT = join(projet_dir, "data")

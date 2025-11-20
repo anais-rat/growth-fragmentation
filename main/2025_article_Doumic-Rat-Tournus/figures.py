@@ -21,13 +21,13 @@ import seaborn as sns
 
 # import parameters as par
 import project_path
-import src.effective_fitness as fv
-import src.parameters.figures_properties as fp
+import src.growth_fragmentation.effective_fitness as fv
+import src.growth_fragmentation.parameters.figures_properties as fp
 
-# import src.parameters.kappas as ker
-import src.plot as plot
+# import src.growth_fragmentation.parameters.kappas as ker
+import src.growth_fragmentation.plot as plot
 
-# import src.write_path as wp
+# import src.growth_fragmentation.write_path as wp
 
 
 # ----------
@@ -49,7 +49,7 @@ sns.set_theme()  # Theme reset to default.
 matplotlib.rcParams.update(matplotlib.rcParamsDefault)  # Reset to default.
 if FORMAT == "article":
     if IS_SAVED:
-        FIG_DIR = os.path.join("2024_article_Doumic-Rat-Tournus")
+        FIG_DIR = os.path.join("2025_article_Doumic-Rat-Tournus")
     sns.set_style("ticks")  # "ticks") # "darkgrid")  whitegrid
     # sns.axes_style("ticks")
     sns.set_context("talk", font_scale=1)  # "poster", font_scale=1)

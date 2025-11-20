@@ -28,8 +28,8 @@ scheme presented in "Bernard, Doumic & Gabriel, Cyclic asymptotic... (2018)"
 import os
 import numpy as np
 
-import src.parameters.init_functions as init
-import src.write_path as wp
+import src.growth_fragmentation.parameters.init_functions as init
+import src.growth_fragmentation.write_path as wp
 
 
 # ---------

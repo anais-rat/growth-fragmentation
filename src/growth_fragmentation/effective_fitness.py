@@ -42,10 +42,10 @@ import seaborn as sns
 import statistics as st
 import warnings
 
-import src.parameters.kappas as ker
-import src.plot as plot
-import src.scheme_direct as scheme
-import src.write_path as wp
+import src.growth_fragmentation.parameters.kappas as ker
+import src.growth_fragmentation.plot as plot
+import src.growth_fragmentation.scheme_direct as scheme
+import src.growth_fragmentation.write_path as wp
 
 
 # ------------------

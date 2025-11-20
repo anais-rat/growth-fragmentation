@@ -25,10 +25,10 @@ scheme presented in "Bernard, Doumic & Gabriel, Cyclic asymptotic... (2018)"
 """
 
 import numpy as np
-import src.scheme_direct as scheme
-import src.parameters.init_functions as init
-import src.plot as plot
-import src.write_path as wp
+import src.growth_fragmentation.growth_fragmentation.scheme_direct as scheme
+import src.growth_fragmentation.growth_fragmentation.parameters.init_functions as init
+import src.growth_fragmentation.growth_fragmentation.plot as plot
+import src.growth_fragmentation.growth_fragmentation.write_path as wp
 
 
 def compute_evo_approximation_no_variability(

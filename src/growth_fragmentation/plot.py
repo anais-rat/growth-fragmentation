@@ -37,9 +37,13 @@ import seaborn as sns
 # import sympy as sy
 
 
-from src.write_path import FOLDER_FIG, FOLDER_VID, remove_special_characters
-import src.parameters.figures_properties as fp
-import src.effective_fitness as fv
+from src.growth_fragmentation.write_path import (
+    FOLDER_FIG,
+    FOLDER_VID,
+    remove_special_characters,
+)
+import src.growth_fragmentation.parameters.figures_properties as fp
+import src.growth_fragmentation.effective_fitness as fv
 
 
 # Parameters of the plots.

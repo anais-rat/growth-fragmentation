@@ -8,8 +8,8 @@ ignore/
 main/2023_article_Rat-Tournus/
 main/2023_thesis/
 main/2024_article_Doumic-Rat-Tournus/ignore/
-src/parameters/figures_paper2.py
-src/scheme_direct_dissipativity.py
+src/growth_fragmentation/parameters/figures_paper2.py
+src/growth_fragmentation/scheme_direct_dissipativity.py
 to_process/
 versions/
 videos/
